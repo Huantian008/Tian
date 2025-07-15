@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>联系方式测试页面</title>
+    <link rel="stylesheet" href="contact-new.css">
+    <!-- Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 2rem; font-family: 'Arial', sans-serif;">
+    
+    <div class="contact-section">
+        <h2>联系我</h2>
+        <p>你可以通过以下方式联系我：</p>
+        
+        <div class="contact-info">
+            <h3>联系方式</h3>
+            
+            <div class="social-links-container">
+                <a href="mailto:your_email@example.com" class="social-link-item email">
+                    <i class="ri-mail-line"></i>
+                    <span>邮箱联系</span>
+                </a>
+                
+                <a href="https://space.bilibili.com/" target="_blank" class="social-link-item bilibili">
+                    <i class="ri-bilibili-line"></i>
+                    <span>B站空间</span>
+                </a>
+                
+                <a href="https://github.com/" target="_blank" class="social-link-item github">
+                    <i class="fab fa-github"></i>
+                    <span>GitHub</span>
+                </a>
+                
+                <a href="https://weibo.com/" target="_blank" class="social-link-item weibo">
+                    <i class="ri-weibo-line"></i>
+                    <span>微博</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 简单的交互效果
+        document.querySelectorAll('.social-link-item').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // 为演示目的，阻止默认行为
+                if (this.href.includes('example.com') || this.href.includes('space.bilibili.com') || this.href.includes('github.com') || this.href.includes('weibo.com')) {
+                    e.preventDefault();
+                    alert('这是一个演示链接：' + this.querySelector('span').textContent);
+                }
+            });
+        });
+    </script>
+    
+</body>
+</html>
