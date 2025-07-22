@@ -2,7 +2,7 @@
 
 int printSquare(int number){
 	int get = number * number;
-printf("%d???????%d\n",number,get);
+printf("%d%d\n",number,get);
 return get;
 }
 int add(int a,int b){
