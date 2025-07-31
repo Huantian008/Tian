@@ -13,9 +13,9 @@ int main(){
   }
   std::cout<<"正在计算总和..."<<std::endl;
   double totalSum=0.0;
-for (int i = 0; i <numbers.size(); i++)
+for (std::size_t i = 0; i < numbers.size(); i++)
 {
- totalSum+=numbers[i];
+ totalSum += numbers[i];
 }
 std::cout<<"所有输入数字的总和是："<<totalSum<<std::endl;
 return 0;
