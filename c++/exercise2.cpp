@@ -32,6 +32,7 @@ int main(){
             std::cout<<"请依次输入新学生的姓名、学号、分数。"<<std::endl;
             Student student;
             student.name;
+            student.score;
         }
         
     }
