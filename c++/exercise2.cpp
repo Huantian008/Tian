@@ -33,6 +33,7 @@ int main(){
             Student student;
             student.name;
             student.score;
+            student.studentID;
         }
         
     }
