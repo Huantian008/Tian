@@ -16,12 +16,13 @@ public:
 };
 
 int main(){
-    system("chcp 65001");
+    
     std::vector<Student> roster;
     int number;
     while (true)
     {
         std::cout<<"学生名册管理系统"<<std::endl;
+        
         std::cout<<"1.添加新学生"<<std::endl;
         std::cout<<"2.显示所有学生"<<std::endl;
         std::cout<<"3.退出程序"<<std::endl;

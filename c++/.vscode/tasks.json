@@ -6,11 +6,18 @@
             "type": "shell",
             "command": "E:\\MinGW\\ucrt64\\bin\\g++.exe",
             "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}\\output\\${fileBasenameNoExtension}.exe"
+               
+    "-fdiagnostics-color=always",
+    "-g",
+    // 我们把 UTF-8 参数移到这里，和其他通用选项放在一起
+    "-finput-charset=UTF-8",
+    "-fexec-charset=UTF-8",
+    // 然后，指定输入文件
+    "${file}",
+    // 最后，让输出选项 -o 和它的文件名参数紧挨在一起
+    "-o",
+    "${fileDirname}\\output\\${fileBasenameNoExtension}.exe"
+
             ],
             "group": {
                 "kind": "build",

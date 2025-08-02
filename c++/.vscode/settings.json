@@ -2,5 +2,17 @@
     "files.associations": {
         "ostream": "cpp",
         "iostream": "cpp"
-    }
+    },
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell",
+            "args": [
+                "-NoExit",
+                "-Command",
+                "$OutputEncoding = [console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "PowerShell"
 }
