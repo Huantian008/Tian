@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "C/C++: g++.exe build active file (UTF-8)",
+      "type": "shell",
+      "command": "E:\\MinGW\\ucrt64\\bin\\g++.exe",
+      "args": [
+        "-fdiagnostics-color=always",
+        "-g",
+        "-finput-charset=UTF-8",
+        "-fexec-charset=UTF-8",
+        "${file}",
+        "-o",
+        "${fileDirname}\\output\\${fileBasenameNoExtension}.exe"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      }
+    },
+    {
+      "label": "Run Active File",
+      "type": "shell",
+      "command": "chcp 65001 > $null; & \"${fileDirname}\\output\\${fileBasenameNoExtension}.exe\"",
+      "dependsOn": "C/C++: g++.exe build active file (UTF-8)",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build and Run Active File",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "C/C++: g++.exe build active file (UTF-8)",
+        "Run Active File"
+      ]
+    }
+  ]
+}
