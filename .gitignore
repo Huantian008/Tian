@@ -1,0 +1,21 @@
+# Dependency directories
+node_modules/
+
+# Build outputs
+**/bin/
+**/output/
+
+# Compiled binaries
+**/*.class
+**/*.exe
+
+# IDE metadata
+.idea/
+.vscode/
+.settings/
+*.iml
+.classpath
+.project
+
+# macOS/Linux system files
+.DS_Store
