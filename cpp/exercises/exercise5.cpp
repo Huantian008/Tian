@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<algorithm>
+#pragma execution_character_set("utf-8")
 int main(){
     std::vector<int>nums={5,2,8,1,9};
     std::sort(nums.begin(),nums.end());

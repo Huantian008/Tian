@@ -1,8 +1,8 @@
 #include<iostream>
 #include<cstdlib> // 为了使用 system() 函数
+#pragma execution_character_set("utf-8")
 using namespace std;
 int main(){
-    system("chcp 936"); // 设置控制台代码页为GBK
     int age=20;
     bool hasLicense =true;
     if(age>=18&&hasLicense){

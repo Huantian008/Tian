@@ -1,4 +1,5 @@
 #include<iostream>
+#pragma execution_character_set("utf-8")
 using namespace std;
 int main(){
     int scores[5]={98,87,92,79,85};

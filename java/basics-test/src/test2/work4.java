@@ -1,42 +1,42 @@
 package test2;
 
 public class work4 {
-    public static class Mankind {
-        int sex;
-        int salary;
+    private static class Mankind {
+        private int sex;
+        private int salary;
 
-        // 修改：修正花括号位置
-        void manOrWorman(int newSex) {
-            if (newSex == 1) {
-                System.out.println("man");
-            } else if (newSex == 0) {
-                System.out.println("woman");
-            }
+        public void setSex(int sex) {
+            this.sex = sex;
+        }
+
+        public void setSalary(int salary) {
+            this.salary = salary;
+        }
+
+        public void printGender() {
+            System.out.println(sex == 1 ? "man" : "woman");
         }
     }
 
-    public static class Kids extends Mankind {
-        int yearsOld;
+    private static final class Kid extends Mankind {
+        private int yearsOld;
 
-        // 修改：修正printAge方法的实现
-        void printAge() {
-            System.out.println("年龄:" + yearsOld);
+        public void setYearsOld(int yearsOld) {
+            this.yearsOld = yearsOld;
+        }
+
+        public void printAge() {
+            System.out.println("age: " + yearsOld);
         }
     }
 
-    // 修改：将E类的访问修饰符从public static 改为public static
-    public static class E {
-        public static void main(String[] args) {
-            Kids someKid = new Kids();
-            someKid.sex = 1;
-            someKid.salary = 5000;
-            someKid.yearsOld = 28;
+    public static void main(String[] args) {
+        Kid someKid = new Kid();
+        someKid.setSex(1);
+        someKid.setSalary(5_000);
+        someKid.setYearsOld(28);
 
-            someKid.manOrWorman(someKid.sex);
-            someKid.printAge();
-        }
+        someKid.printGender();
+        someKid.printAge();
     }
 }
-
-
-

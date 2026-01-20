@@ -10,7 +10,7 @@ public class Plant {
     }
 
     public Plant() {
-        this("乔木", 500);
+        this("Evergreen", 500);
     }
 
     public String getName() {
@@ -30,19 +30,21 @@ public class Plant {
     }
 
     public void showInfo() {
-        System.out.println("植物名称: " + name);
-        System.out.println("植物价格: " + price);
+        System.out.println("Plant name: " + name);
+        System.out.println("Plant price: " + price);
     }
 
     public static void main(String[] args) {
-        Plant p1 = new Plant("植物1", 100);
+        Plant p1 = new Plant("Plant A", 100);
         Plant p2 = new Plant();
-        System.out.println("p1的信息：");
+        System.out.println("p1 details:");
         p1.showInfo();
-        System.out.println("\np2的信息：");
+        System.out.println();
+        System.out.println("p2 details:");
         p2.showInfo();
-        p2.setPrice(1000);
-        System.out.println("\n修改后p2的信息：");
+        p2.setPrice(1_000);
+        System.out.println();
+        System.out.println("p2 details after price update:");
         p2.showInfo();
     }
 }

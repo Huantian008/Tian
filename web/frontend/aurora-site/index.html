@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极光实验室 · 个人网站</title>
+    <meta name="description" content="极光实验室：记录学习笔记、项目和灵感的个人网站">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="noise"></div>
+    <header class="site-header">
+        <div class="logo">极光<span>Lab</span></div>
+        <nav class="site-nav">
+            <a href="#hero">主页</a>
+            <a href="#about">关于</a>
+            <a href="#projects">项目</a>
+            <a href="#journal">灵感</a>
+            <a href="#contact">联系</a>
+        </nav>
+        <button id="themeToggle" class="theme-toggle" aria-label="切换主题">
+            <span class="theme-icon">☀️</span>
+        </button>
+    </header>
+
+    <main>
+        <section id="hero" class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">欢迎来到我的线上实验室</p>
+                <h1>构建酷炫网站、记录灵感、分享学习</h1>
+                <p class="lede">
+                    我喜欢把技术与创意结合在一起，这里收藏了我最近的前端实验、后端 API
+                    练习以及一些随手记下的灵感，希望你也能从中获得灵感。
+                </p>
+                <div class="hero-actions">
+                    <a class="primary" href="#projects">查看项目</a>
+                    <a class="ghost" href="#contact">写信给我</a>
+                </div>
+                <div class="stats">
+                    <div>
+                        <span class="stat-number">12+</span>
+                        <span class="stat-label">Side Projects</span>
+                    </div>
+                    <div>
+                        <span class="stat-number">320</span>
+                        <span class="stat-label">学习笔记</span>
+                    </div>
+                    <div>
+                        <span class="stat-number">3</span>
+                        <span class="stat-label">开源贡献</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-panel">
+                <div class="hero-card">
+                    <p class="hero-card-label">当前研究主题</p>
+                    <h3>交互式数据可视化</h3>
+                    <p>探索 Canvas 与 WebGL 的混合渲染方式，让作品既流畅又灵动。</p>
+                    <div class="hero-tags">
+                        <span>WebGL</span>
+                        <span>交互设计</span>
+                        <span>可视化</span>
+                    </div>
+                </div>
+                <div class="glow"></div>
+            </div>
+        </section>
+
+        <section id="about" class="panel about">
+            <div class="panel-header">
+                <p class="eyebrow">关于我</p>
+                <h2>喜欢结构、也热爱自由</h2>
+                <p>白天写整洁的代码，晚上尝试大胆的视觉实验。正在学习 Java、前端框架与后端 API 设计。</p>
+            </div>
+            <div class="about-grid">
+                <article class="card">
+                    <h3>技术栈</h3>
+                    <ul>
+                        <li><span>前端：</span> HTML · CSS · JavaScript · React（在学）</li>
+                        <li><span>后端：</span> Node.js · Express · MongoDB</li>
+                        <li><span>工具：</span> Git · Figma · VS Code</li>
+                    </ul>
+                </article>
+                <article class="card">
+                    <h3>近期开源目标</h3>
+                    <p>整理学习笔记，打包成一个「新手友好」的组件库，包含文档与使用示例。</p>
+                </article>
+                <article class="card">
+                    <h3>时间线</h3>
+                    <ul class="timeline">
+                        <li>
+                            <span class="timeline-year">2022</span>
+                            <p>入门编程，完成第一个静态网页。</p>
+                        </li>
+                        <li>
+                            <span class="timeline-year">2023</span>
+                            <p>开始学习 Java 与 OOP，写下不少练习项目。</p>
+                        </li>
+                        <li>
+                            <span class="timeline-year">2024</span>
+                            <p>搭建全栈项目：Express API + 前端 SPA + JSON 数据存储。</p>
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section id="projects" class="panel projects">
+            <div class="panel-header">
+                <p class="eyebrow">项目墙</p>
+                <h2>正在维护的实验</h2>
+            </div>
+            <div class="project-grid">
+                <article class="project-card">
+                    <div class="project-pill">最新</div>
+                    <h3>Nova UI Kit</h3>
+                    <p>面向新手的轻量级组件库，目标是让设计语言更统一，也让复制粘贴更简单。</p>
+                    <ul>
+                        <li>35+ Reusable Components</li>
+                        <li>CSS 变量可配置主题</li>
+                        <li>配套故事集与文档</li>
+                    </ul>
+                    <div class="project-links">
+                        <a href="#" aria-label="查看演示">Live Demo</a>
+                        <a href="#" aria-label="查看源码">Git Repo</a>
+                    </div>
+                </article>
+                <article class="project-card">
+                    <h3>轨迹 · Task Tracker</h3>
+                    <p>通过可视化时间线追踪每个任务的生命线，并利用番茄钟自动记录效率。</p>
+                    <ul>
+                        <li>Express + SQLite API</li>
+                        <li>自适应暗色主题</li>
+                        <li>导出周报 PDF</li>
+                    </ul>
+                    <div class="project-links">
+                        <a href="#">产品文档</a>
+                    </div>
+                </article>
+                <article class="project-card">
+                    <h3>Chrono Blog</h3>
+                    <p>聚焦「学习过程」，借助 markdown + JSON 构建可搜索的学习档案。</p>
+                    <ul>
+                        <li>静态生成 + 边缘缓存</li>
+                        <li>全文搜索索引</li>
+                        <li>语气提示与脚注系统</li>
+                    </ul>
+                    <div class="project-links">
+                        <a href="#">阅读上线版</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section id="journal" class="panel journal">
+            <div class="panel-header">
+                <p class="eyebrow">灵感速记</p>
+                <h2>最近的三条想法</h2>
+            </div>
+            <div class="journal-grid">
+                <article class="journal-card">
+                    <p class="journal-date">02 / 24</p>
+                    <h3>从「形」入手设计动画</h3>
+                    <p>在 Figma 先构建几何形态，再在代码里拆分成层级，动画自然很多。</p>
+                </article>
+                <article class="journal-card">
+                    <p class="journal-date">02 / 18</p>
+                    <h3>写项目日志的好处</h3>
+                    <p>记录完成与未完成的事项，让代码仓库以外也有一个「叙事版本」。</p>
+                </article>
+                <article class="journal-card">
+                    <p class="journal-date">02 / 10</p>
+                    <h3>别忽略可访问性</h3>
+                    <p>加上 ARIA 标签和键盘焦点之后，整体质量会有立刻可见的提升。</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="contact" class="panel contact">
+            <div class="panel-header">
+                <p class="eyebrow">联系我</p>
+                <h2>欢迎交流任何想法</h2>
+            </div>
+            <div class="contact-wrapper">
+                <div class="contact-card">
+                    <h3>写封信</h3>
+                    <p>留言会被发送到本地 Express API（参见 <code>web/backend/server.js</code>）。如果服务器未启动，也会自动保存到浏览器中。</p>
+                    <form id="contactForm">
+                        <label>
+                            姓名
+                            <input type="text" name="name" placeholder="你的名字" required>
+                        </label>
+                        <label>
+                            邮箱
+                            <input type="email" name="email" placeholder="you@example.com" required>
+                        </label>
+                        <label>
+                            留言
+                            <textarea name="message" rows="4" placeholder="想聊点什么？" required></textarea>
+                        </label>
+                        <button type="submit">发送消息</button>
+                        <p id="formStatus" role="status" aria-live="polite"></p>
+                    </form>
+                </div>
+                <div class="contact-card resources">
+                    <h3>更多链接</h3>
+                    <ul>
+                        <li><span>Github</span> <a href="https://github.com/" target="_blank" rel="noreferrer">github.com/your-id</a></li>
+                        <li><span>Blog</span> <a href="#" target="_blank" rel="noreferrer">blog.aurora.dev</a></li>
+                        <li><span>B站</span> <a href="https://www.bilibili.com/" target="_blank" rel="noreferrer">创作中</a></li>
+                    </ul>
+                    <p class="tip">可在 <code>app.js</code> 中调整 API 地址或自定义提交逻辑。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>© <span id="year"></span> 极光实验室 · 保持好奇心</p>
+    </footer>
+
+    <script src="app.js" defer></script>
+</body>
+</html>

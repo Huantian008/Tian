@@ -1,35 +1,42 @@
 package javawork;
 
 public class work4 {
-    public static class Mankind {
-        int sex;
-        int salary;
+    private static class Mankind {
+        private int sex;
+        private int salary;
 
-        void manOrWoman(int newSex) {
-            if (newSex == 1) {
-                System.out.println("男性");
-            } else if (newSex == 0) {
-                System.out.println("女性");
-            }
+        public void setSex(int sex) {
+            this.sex = sex;
+        }
+
+        public void setSalary(int salary) {
+            this.salary = salary;
+        }
+
+        public void printGender() {
+            System.out.println(sex == 1 ? "male" : "female");
         }
     }
 
-    public static class Kids extends Mankind {
-        int yearsOld;
+    private static final class Kid extends Mankind {
+        private int yearsOld;
 
-        void printAge() {
-            System.out.println("年龄:" + yearsOld);
+        public void setYearsOld(int yearsOld) {
+            this.yearsOld = yearsOld;
+        }
+
+        public void printAge() {
+            System.out.println("age: " + yearsOld);
         }
     }
 
-    public static class E {
-        public static void main(String[] args) {
-            Kids someKid = new Kids();
-            someKid.sex = 1;
-            someKid.salary = 5000;
-            someKid.yearsOld = 28;
-            someKid.manOrWoman(someKid.sex);
-            someKid.printAge();
-        }
+    public static void main(String[] args) {
+        Kid someKid = new Kid();
+        someKid.setSex(1);
+        someKid.setSalary(5_000);
+        someKid.setYearsOld(28);
+
+        someKid.printGender();
+        someKid.printAge();
     }
 }

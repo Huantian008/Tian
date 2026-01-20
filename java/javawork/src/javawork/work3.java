@@ -1,53 +1,39 @@
 package javawork;
 
+import java.util.Map;
 import java.util.Scanner;
 
 public class work3 {
+    private static final Map<Integer, String> MONTH_TO_DAYS = Map.ofEntries(
+            Map.entry(1, "31 days"),
+            Map.entry(2, "28 or 29 days"),
+            Map.entry(3, "31 days"),
+            Map.entry(4, "30 days"),
+            Map.entry(5, "31 days"),
+            Map.entry(6, "30 days"),
+            Map.entry(7, "31 days"),
+            Map.entry(8, "31 days"),
+            Map.entry(9, "30 days"),
+            Map.entry(10, "31 days"),
+            Map.entry(11, "30 days"),
+            Map.entry(12, "31 days")
+    );
+
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.print("Enter a month number (1-12): ");
+            if (!scanner.hasNextInt()) {
+                System.out.println("Input must be an integer.");
+                return;
+            }
 
-        System.out.print("请输入月份（1-12）：");
-        int month = scanner.nextInt();
-
-        switch (month) {
-            case 1:
-                System.out.println("1月的天数是31天");
-                break;
-            case 2:
-                System.out.println("2月的天数是28或29天");
-                break;
-            case 3:
-                System.out.println("3月的天数是31天");
-                break;
-            case 4:
-                System.out.println("4月的天数是30天");
-                break;
-            case 5:
-                System.out.println("5月的天数是31天");
-                break;
-            case 6:
-                System.out.println("6月的天数是30天");
-                break;
-            case 7:
-                System.out.println("7月的天数是31天");
-                break;
-            case 8:
-                System.out.println("8月的天数是31天");
-                break;
-            case 9:
-                System.out.println("9月的天数是30天");
-                break;
-            case 10:
-                System.out.println("10月的天数是31天");
-                break;
-            case 11:
-                System.out.println("11月的天数是30天");
-                break;
-            case 12:
-                System.out.println("12月的天数是31天");
-                break;
-            default:
-                System.out.println("输入无效，月份应在1-12之间");
+            int month = scanner.nextInt();
+            String days = MONTH_TO_DAYS.get(month);
+            if (days == null) {
+                System.out.println("Month must be between 1 and 12.");
+            } else {
+                System.out.println("Month " + month + " has " + days + ".");
+            }
         }
     }
 }

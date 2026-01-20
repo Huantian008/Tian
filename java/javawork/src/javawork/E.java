@@ -1,35 +1,33 @@
 package javawork;
 
 public class E {
-	public static void main(String[] args) {
-
-    	Music music = new Music();
-    	music.tune(new Wind());
-    	music.tune(new Brass());
-
+    public static void main(String[] args) {
+        Music music = new Music();
+        music.tune(new Wind());
+        music.tune(new Brass());
     }
-    
 }
+
 abstract class Instrument {
     public abstract void play();
 }
 
-class Wind extends Instrument {
+final class Wind extends Instrument {
+    @Override
     public void play() {
-        System.out.println("弹奏Wind");
+        System.out.println("Playing a wind instrument");
     }
 }
 
-class Brass extends Instrument {
+final class Brass extends Instrument {
+    @Override
     public void play() {
-        System.out.println("弹奏Brass");
+        System.out.println("Playing a brass instrument");
     }
 }
 
-class Music {
-    public void tune(Instrument i) {
-        i.play();
+final class Music {
+    public void tune(Instrument instrument) {
+        instrument.play();
     }
 }
-
-

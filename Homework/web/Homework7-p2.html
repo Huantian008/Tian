@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>川菜简介</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            margin: 0;
+            padding: 30px 20px 80px;
+            color: #333;
+            background: #f6f6f6;
+        }
+        .wrapper {
+            max-width: 1080px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px 24px 60px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            font-size: 22px;
+            margin: 6px 0 14px;
+        }
+        .section {
+            border-top: 1px solid #e5e5e5;
+            padding-top: 22px;
+        }
+        .intro {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            margin-bottom: 26px;
+        }
+        .intro img {
+            width: 260px;
+            height: auto;
+            border-radius: 6px;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+        }
+        .intro p {
+            margin: 0;
+            line-height: 1.8;
+            text-align: justify;
+        }
+        .intro strong {
+            color: #e60012;
+        }
+        .return {
+            position: absolute;
+            right: 20px;
+            bottom: 18px;
+        }
+        .return img {
+            width: 120px;
+            height: auto;
+            transition: transform 0.2s ease;
+        }
+        .return img:hover {
+            transform: translateX(-4px);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="section">
+            <h1>川菜简介</h1>
+            <div class="intro">
+                <img src="img/img/BiaoTi.gif" alt="川菜">
+                <p>什么叫川菜？川菜就是两 “了”，即 “吃了忘不了”。即使用很普通的料，也做得风味独特，入口生香。川菜取材广泛，切配精细，菜式众多，烹制讲究，调料丰富，味别多样。技法上有烹、炸、焖、煎、炒、烧、煸、炖、焐、烩、蒸、烤、熘。烹饪过程中掌握火候最为关键，以调味最为重要。即便是一个<strong>辣</strong>味，也有香辣、麻辣、咸辣、微辣等不同的区别。</p>
+            </div>
+        </div>
+
+        <a class="return" href="javascript:void 0" title="返回第一页" id="goBack">
+            <img src="img/img/return.png" alt="返回">
+        </a>
+    </div>
+
+    <script>
+        // 关闭弹窗或跳回第一页
+        document.getElementById('goBack').addEventListener('click', function () {
+            // 如果是弹窗打开，优先关闭当前窗口
+            if (window.opener && !window.opener.closed) {
+                window.close();
+            } else {
+                window.location.href = 'Homework7.html';
+            }
+        });
+    </script>
+</body>
+</html>

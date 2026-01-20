@@ -1,4 +1,5 @@
 #include<iostream>
+#pragma execution_character_set("utf-8")
 void swap(int& a,int& b){
     int change=a;
     a=b;

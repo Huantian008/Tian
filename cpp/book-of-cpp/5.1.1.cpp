@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#pragma execution_character_set("utf-8")
 using namespace std;
 int main(){
     vector<int> nums;

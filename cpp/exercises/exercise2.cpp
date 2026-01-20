@@ -1,6 +1,7 @@
 #include<iostream>
 #include<string>
 #include<vector>
+#pragma execution_character_set("utf-8")
  class Student
 {
 public:

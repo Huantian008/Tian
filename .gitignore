@@ -19,3 +19,16 @@ node_modules/
 
 # macOS/Linux system files
 .DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite
+*.sqlite3
+tempCodeRunnerFile*
+*.log
+.env
+venv/
+env/

@@ -1,0 +1,12 @@
+# Java bytecode
+*.class
+
+# Build output directories
+bin/
+out/
+
+# IntelliJ project files
+.idea/
+
+# macOS metadata
+.DS_Store

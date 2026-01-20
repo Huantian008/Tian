@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>作业</title>
+  <style>
+    :root {
+      --maroon: #3c0000;
+      --sidebar: #a0660f;
+      --text-light: #fff7f3;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+      background: url("img/img/bg.jpg") repeat;
+      color: var(--text-light);
+      display: flex;
+      justify-content: center;
+      padding: 32px 36px;
+    }
+
+    .card {
+      width: 1220px;
+      min-height: 720px;
+      background: url("img/img/bg.jpg") repeat;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      border: none;
+    }
+
+    header {
+      position: relative;
+      height: 110px;
+      background: var(--maroon);
+      overflow: visible;
+    }
+
+    header h1 {
+      position: absolute;
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: 1px;
+      line-height: 1;
+      z-index: 9999;
+    }
+
+    .title-back {
+      left: 30px;
+      top: 12px;
+      font-size: 58px;
+      color: #ff1e1e;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.45);
+    }
+
+    .title-front {
+      left: 108px;
+      top: 28px;
+      font-size: 66px;
+      color: #ffffff;
+      text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .body {
+      flex: 1;
+      display: flex;
+      position: relative;
+      background: url("img/img/bg.jpg") repeat;
+    }
+
+    .sidebar {
+      position: relative;
+      width: 220px;
+      overflow: visible;
+      background: transparent;
+    }
+
+    .sidebar::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #a0660f url("img/img/bg_lt.png") repeat-y center top;
+      background-size: cover;
+      z-index: 0;
+    }
+
+    nav {
+      position: relative;
+      z-index: 1;
+      padding: 235px 32px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    nav ul {
+      list-style: none;
+      width: 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    nav li {
+      position: relative;
+      width: 160px;
+    }
+
+    nav li a {
+      display: block;
+      width: 160px;
+      height: 42px;
+      line-height: 42px;
+      color: #5e1b12;
+      font-weight: bold;
+      text-decoration: none;
+      text-align: center;
+      background: url("img/img/btn.png") no-repeat center/contain;
+      transition: transform 0.15s ease, filter 0.15s ease, background-image 0.1s ease;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+    }
+
+    nav li a:hover {
+      background-image: url("img/img/btn_hover.png");
+      transform: translateX(5px);
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
+    }
+
+    .main {
+      flex: 1;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      color: #e93026;
+      font-size: 22px;
+      font-weight: bold;
+      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8);
+    }
+
+    footer {
+      height: 60px;
+      background: var(--maroon);
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <h1 class="title-back">HTML5+CSS3</h1>
+      <h1 class="title-front">HTML5+CSS3</h1>
+    </header>
+
+    <div class="body">
+      <aside class="sidebar">
+        <nav>
+          <ul>
+            <li><a href="#">最新消息</a></li>
+            <li><a href="#">flash动画</a></li>
+            <li><a href="#">短片欣赏</a></li>
+            <li><a href="#">音乐欣赏</a></li>
+            <li><a href="#">浏览版</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      
+    </div>
+
+    <footer>欢迎光临我的网站!</footer>
+  </div>
+</body>
+</html>

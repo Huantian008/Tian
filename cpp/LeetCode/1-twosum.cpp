@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#pragma execution_character_set("utf-8")
 //这是用暴力遍历的
 using namespace std;
 class Solution{

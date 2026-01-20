@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#pragma execution_character_set("utf-8")
 int main(){
    std::vector<double> scores;
    double number;

@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#pragma execution_character_set("utf-8")
 using namespace std;
 int main(){
     vector<int> numbers{ 10,20,30,40,50};

@@ -1,6 +1,7 @@
 #include <iostream>
 #include<vector>
 #include<unordered_map>
+#pragma execution_character_set("utf-8")
 //哈希表写的
 using namespace std;
 class Solution{

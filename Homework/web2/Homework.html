@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Homework</title>
+  <style>
+    body {
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 0;
+    }
+
+    .top-list {
+      width: 260px;
+      border: 1px solid #cfcfcf;
+      background: #fff;
+      padding: 14px 12px 10px;
+      box-sizing: border-box;
+    }
+
+    .top-list h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      color: #333;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .top-list ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: 12px;
+    }
+
+    .top-list li {
+      background: url("img/img/top10-bullet.png") no-repeat 4px 9px;
+      line-height: 20px;
+      padding: 8px 6px 8px 34px;
+      color: #777;
+    }
+
+    .top-list li + li { border-top: 1px dashed #d0d0d0; }
+
+    .top-list li:nth-child(2) { background-position: 4px -32px; }
+    .top-list li:nth-child(3) { background-position: 4px -72px; }
+    .top-list li:nth-child(4) { background-position: 4px -112px; }
+    .top-list li:nth-child(5) { background-position: 4px -152px; }
+    .top-list li:nth-child(6) { background-position: 4px -192px; }
+    .top-list li:nth-child(7) { background-position: 4px -232px; }
+    .top-list li:nth-child(8) { background-position: 4px -272px; }
+
+    .top-list a {
+      text-decoration: none;
+      color: #6a6a6a;
+      display: block;
+    }
+
+    .top-list a:hover {
+      color: #f63;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-list">
+    <h3>
+      <img src="img/img/icon.png" alt="icon" width="18" height="18">
+      双周热门推荐
+    </h3>
+    <ul>
+      <li><a href="#">送君千里 终须一别</a></li>
+      <li><a href="#">旅行的意义</a></li>
+      <li><a href="#">大学生周浩：摩托骑行环游中国</a></li>
+      <li><a href="#">榴莲糯米糍</a></li>
+      <li><a href="#">团队精神</a></li>
+      <li><a href="#">白菜鸡肉粉丝包</a></li>
+      <li><a href="#">《给青年的十二封信》</a></li>
+      <li><a href="#">我们，只会在路上相遇</a></li>
+    </ul>
+  </div>
+</body>
+</html>

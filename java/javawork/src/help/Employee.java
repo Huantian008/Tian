@@ -2,45 +2,35 @@ package help;
 
 public class Employee {
     private String name;
-    private String titlePos;
+    private String title;
 
-    // 无参构造方法
     public Employee() {
-        this.name = "李彦宏";
-        this.titlePos = "技术总监";
+        this("Default Name", "Technical Director");
     }
 
-    // 可为name和titlePos初始化的构造方法
-    public Employee(String name, String titlePos) {
+    public Employee(String name, String title) {
         this.name = name;
-        this.titlePos = titlePos;
+        this.title = title;
     }
 
-    // 获取姓名
     public String getName() {
         return name;
     }
 
-    // 设置姓名
     public void setName(String name) {
         this.name = name;
     }
 
-    // 获取职称
-    public String getTitlePos() {
-        return titlePos;
+    public String getTitle() {
+        return title;
     }
 
-    // 设置职称
-    public void setTitlePos(String titlePos) {
-        this.titlePos = titlePos;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    // 显示信息的方法
     public void showInfo() {
-        System.out.println("姓名: " + name);
-        System.out.println("职称: " + titlePos);
+        System.out.println("Name: " + name);
+        System.out.println("Title: " + title);
     }
 }
-
-

@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#pragma execution_character_set("utf-8")
 using namespace std;
 void print_vector(const vector<int>&vec){
     cout<<"Vector 内容";

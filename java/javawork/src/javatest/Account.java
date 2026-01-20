@@ -12,7 +12,11 @@ public class Account {
     }
 
     public Account() {
-        this("622600012010", "张三丰", 6000.0);
+        this("622600012010", "Default User", 6_000.0);
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
     }
 
     public void setAccountNumber(String accountNumber) {
@@ -36,8 +40,8 @@ public class Account {
     }
 
     public void display() {
-        System.out.println("账户:" + accountNumber);
-        System.out.println("姓名:" + name);
-        System.out.println("余额：" + balance);
+        System.out.println("Account: " + accountNumber);
+        System.out.println("Name: " + name);
+        System.out.println("Balance: " + balance);
     }
 }

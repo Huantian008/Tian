@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<memory>
+#pragma execution_character_set("utf-8")
 using namespace std;
 class Animal{
     public:

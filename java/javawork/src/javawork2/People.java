@@ -1,90 +1,108 @@
 package javawork2;
 
 public class People {
-	 public static void main(String[] args) {}
-	 
-	protected double weight,height;
+    protected double weight;
+    protected double height;
 
-	  public void speakHello() {
-
-	     System.out.println("yayayaya");
-
-	  } 
-
-	  public void averageHeight() {
-
-	      height=173;
-
-	      System.out.println("average height:"+height);
-
-	  }
-
-	  public void averageWeight() {
-
-	     weight=70;
-
-	     System.out.println("average weight:"+weight);
-
-	  }
-}
- class ChinaPeople extends People{
-	 public void speakHello() {
-		 System.out.println("喵喵喵");
-	 }
-	 public void averageHeight() {
-
-	      height=185;
-
-	      System.out.println("average height:"+height);
-
-}
-   public void averageWeight() {
-
-     weight=128;
-
-     System.out.println("average weight:"+weight);
-
-  }
-   public void chinaGongfu() {
-
-       System.out.println("我是中国人，我会中国功夫：坐如钟,站如松,睡如弓");
-
+    public void speakHello() {
+        System.out.println("Hello!");
     }
- }
- class JiangXiPeople extends ChinaPeople{
-	 public void speakHello() {
 
-	     System.out.println("组犀利");
+    public void averageHeight() {
+        height = 173;
+        System.out.println("Average height: " + height);
+    }
 
-	  } 
+    public void averageWeight() {
+        weight = 70;
+        System.out.println("Average weight: " + weight);
+    }
 
-	  public void averageHeight() {
+    public static void main(String[] args) {
+        People base = new People();
+        System.out.println("People:");
+        base.speakHello();
+        base.averageHeight();
+        base.averageWeight();
 
-	      height=183;
+        System.out.println();
 
-	      System.out.println("average height:"+height);
+        ChinaPeople china = new ChinaPeople();
+        System.out.println("ChinaPeople:");
+        china.speakHello();
+        china.averageHeight();
+        china.averageWeight();
+        china.chinaGongfu();
 
-	  }
+        System.out.println();
 
-	  public void averageWeight() {
+        JiangXiPeople jiangXi = new JiangXiPeople();
+        System.out.println("JiangXiPeople:");
+        jiangXi.speakHello();
+        jiangXi.averageHeight();
+        jiangXi.averageWeight();
+        jiangXi.jiangxiTese();
 
-	     weight=121;
+        System.out.println();
 
-	     System.out.println("average weight:"+weight);
+        NanChang nanChang = new NanChang();
+        System.out.println("NanChang:");
+        nanChang.speakHello();
+        nanChang.averageHeight();
+        nanChang.averageWeight();
+        nanChang.jiangxiTese();
+        nanChang.delicacy();
+    }
+}
 
-	  }
-	  public void jiangxiTese() {
+class ChinaPeople extends People {
+    @Override
+    public void speakHello() {
+        System.out.println("Hello from China!");
+    }
 
-	       System.out.println("我是江西人，我大江西风景名胜：滕王阁、庐山、龙虎山、三清山、明月山、井冈山");
+    @Override
+    public void averageHeight() {
+        height = 185;
+        System.out.println("Average height: " + height);
+    }
 
-	   }
-	 
- }
- class NanChang extends JiangXiPeople {
-	 public void delicacy() {
-		 System.out.println("南昌拌粉");
+    @Override
+    public void averageWeight() {
+        weight = 128;
+        System.out.println("Average weight: " + weight);
+    }
 
-	 }
-	 
- }
- 
+    public void chinaGongfu() {
+        System.out.println("Chinese kung fu demo: sit straight, stand firm, sleep soundly.");
+    }
+}
+
+class JiangXiPeople extends ChinaPeople {
+    @Override
+    public void speakHello() {
+        System.out.println("Hello from Jiangxi!");
+    }
+
+    @Override
+    public void averageHeight() {
+        height = 183;
+        System.out.println("Average height: " + height);
+    }
+
+    @Override
+    public void averageWeight() {
+        weight = 121;
+        System.out.println("Average weight: " + weight);
+    }
+
+    public void jiangxiTese() {
+        System.out.println("Jiangxi highlights: Tengwang Pavilion, Lushan, Longhu Mountain, Jinggang Mountain.");
+    }
+}
+
+class NanChang extends JiangXiPeople {
+    public void delicacy() {
+        System.out.println("Famous dish: Nanchang mixed rice noodles.");
+    }
+}

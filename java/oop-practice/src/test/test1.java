@@ -1,35 +1,33 @@
 package test;
 
 public class test1 {
-    abstract class Instrument {
-        public abstract void play();
+    private interface Instrument {
+        void play();
     }
 
-    class Wind extends Instrument {
+    private static final class Wind implements Instrument {
+        @Override
         public void play() {
-            System.out.println("弹奏Wind");
+            System.out.println("Playing Wind");
         }
     }
 
-    class Brass extends Instrument {
+    private static final class Brass implements Instrument {
+        @Override
         public void play() {
-            System.out.println("弹奏Brass");
+            System.out.println("Playing Brass");
         }
     }
 
-   public static class Music {
-        public void tune(Instrument i) {
-            i.play();
+    private static final class Music {
+        public void tune(Instrument instrument) {
+            instrument.play();
         }
     }
 
-    public static class E {
-        public static void main(String[] args) {
-
-            Music music = new Music();
-            music.tune(new Wind());
-            music.tune(new Brass());
-
-        }
+    public static void main(String[] args) {
+        Music music = new Music();
+        music.tune(new Wind());
+        music.tune(new Brass());
     }
 }

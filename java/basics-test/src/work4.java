@@ -1,41 +1,40 @@
-
-
 public class work4 {
-	public static class Mankind{
-	 int sex;
-	 int salary;
-	void manOrWorman(int  newSex) {
-				if (newSex == 1) {
-            System.out.println("man");
-        } else if (newSex == 0) {
-            System.out.println("woman");
-		
-	}
-}
-	public static class kids extends Mankind{
-		 int yearsOld;
-		void printAge() {
-			System.out.println("年龄:"+yearsOld);
-		
-		}
-	}
-	
-public  static class E{
-	public static void main(String[] args) {
-		kids somekid=new kids();
-		somekid.sex = 1;
-        somekid.salary = 5000;
-        somekid.yearsOld = 28;
-        somekid.manOrWorman(somekid.sex);
-        somekid.printAge();
-}
+    private static class Mankind {
+        private int sex;
+        private int salary;
 
-	
-}
-}
-	
-	}
+        public void setSex(int sex) {
+            this.sex = sex;
+        }
 
+        public void setSalary(int salary) {
+            this.salary = salary;
+        }
 
-		
-	
+        public void printGender() {
+            System.out.println(sex == 1 ? "man" : "woman");
+        }
+    }
+
+    private static final class Kid extends Mankind {
+        private int yearsOld;
+
+        public void setYearsOld(int yearsOld) {
+            this.yearsOld = yearsOld;
+        }
+
+        public void printAge() {
+            System.out.println("age: " + yearsOld);
+        }
+    }
+
+    public static void main(String[] args) {
+        Kid someKid = new Kid();
+        someKid.setSex(1);
+        someKid.setSalary(5_000);
+        someKid.setYearsOld(28);
+
+        someKid.printGender();
+        someKid.printAge();
+    }
+}

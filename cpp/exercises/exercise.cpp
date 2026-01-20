@@ -1,7 +1,7 @@
 #include<iostream>
 #include<vector>
+#pragma execution_character_set("utf-8")
 int main(){
-    system("chcp 65001");
   std::vector<double>numbers;
   double num;
    std::cout<<"请输入一个数字（输入-1表示结束）"<<std::endl;
