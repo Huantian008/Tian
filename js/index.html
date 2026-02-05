@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的 JavaScript 项目</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>欢迎来到我的 JavaScript 项目</h1>
+        
+        <div class="card">
+            <h2>计数器示例</h2>
+            <p>当前计数: <span id="count">0</span></p>
+            <div class="button-group">
+                <button id="decreaseBtn" class="btn btn-danger">-</button>
+                <button id="resetBtn" class="btn btn-secondary">重置</button>
+                <button id="increaseBtn" class="btn btn-success">+</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>输入示例</h2>
+            <input type="text" id="nameInput" placeholder="输入你的名字">
+            <button id="greetBtn" class="btn btn-primary">打招呼</button>
+            <p id="greeting"></p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

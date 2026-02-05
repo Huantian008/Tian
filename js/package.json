@@ -1,0 +1,16 @@
+{
+  "name": "js-beginner-project",
+  "version": "1.0.0",
+  "description": "一个适合初学者的 JavaScript 项目模板",
+  "main": "app.js",
+  "scripts": {
+    "start": "echo '请在浏览器中打开 index.html 文件来查看项目'"
+  },
+  "keywords": [
+    "javascript",
+    "beginner",
+    "学习"
+  ],
+  "author": "",
+  "license": "MIT"
+}

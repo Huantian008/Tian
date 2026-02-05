@@ -81,16 +81,15 @@ app.post('/api/messages', (req, res) => {
 
 // AI聊天API模拟
 app.post('/api/chat', (req, res) => {
-    try {
+    (async () => {
         const { message } = req.body;
-        
+
         // 验证请求数据
         if (!message) {
             return res.status(400).json({ error: '消息不能为空' });
         }
-        
-        // 模拟AI响应
-        const responses = [
+
+        const fallbackResponses = [
             '你好！我能帮你什么忙吗？',
             '这是一个很有趣的问题！',
             '我理解你的意思了。',
@@ -100,19 +99,67 @@ app.post('/api/chat', (req, res) => {
             '这个问题很复杂，但我会尽力回答。',
             '我喜欢与你聊天！'
         ];
-        
-        // 随机选择一个响应
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        
-        // 延迟响应，模拟AI思考时间
-        setTimeout(() => {
-            res.json({ response: randomResponse });
-        }, 1000);
-        
-    } catch (error) {
-        console.error('AI聊天错误:', error);
-        res.status(500).json({ error: '处理聊天请求失败' });
-    }
+
+        function pickFallback() {
+            return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+        }
+
+        async function callGeminiText(promptText) {
+            const apiKey = process.env.GEMINI_API_KEY;
+            if (!apiKey) return null;
+
+            const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 20000);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [
+                            {
+                                role: 'user',
+                                parts: [{ text: String(promptText) }]
+                            }
+                        ],
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 256
+                        }
+                    }),
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text().catch(() => '');
+                    throw new Error(`Gemini API 返回状态 ${response.status}${errText ? `: ${errText}` : ''}`);
+                }
+
+                const data = await response.json();
+                const text = data?.candidates?.[0]?.content?.parts?.map(p => p?.text).filter(Boolean).join('') || '';
+                return text.trim() || null;
+            } finally {
+                clearTimeout(timeout);
+            }
+        }
+
+        try {
+            const geminiText = await callGeminiText(message);
+            if (geminiText) {
+                return res.json({ response: geminiText });
+            }
+
+            // 未配置 GEMINI_API_KEY 时，回退到本地模拟响应
+            return res.json({ response: pickFallback() });
+        } catch (error) {
+            console.error('AI聊天错误:', error);
+            // Gemini 调用失败时也回退，保证前端可用
+            return res.json({ response: pickFallback() });
+        }
+    })();
 });
 
 // 启动服务器
