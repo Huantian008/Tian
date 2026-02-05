@@ -32,3 +32,6 @@ tempCodeRunnerFile*
 .env
 venv/
 env/
+
+# Ignore student system zip
+python/第九组-学生成绩管理系统.zip
