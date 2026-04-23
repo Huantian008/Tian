@@ -1,51 +1,61 @@
 # Java 学习代码
 
-Java 练习已收敛为单一主模块 `javawork`，历史练习迁移到 `legacy` 包下统一维护。
+当前工作区已收口为单一主模块 `javawork`。历史练习源码统一迁移到 `javawork/src/legacy/...` 下维护，顶层只保留必要配置和说明文件。
 
-## 📁 项目结构
+## 项目结构
 
-```
+```text
 Java/
 ├── javawork/
 │   ├── src/
-│   │   ├── javawork*/        # 现有练习包
+│   │   ├── javawork*/        # 当前练习包
 │   │   └── legacy/           # 迁移自旧模块的历史练习
-│   └── out/                  # 编译输出（可清理）
+│   └── javawork.iml
 ├── .vscode/
 ├── .idea/
 ├── .gitignore
-├── run_all.ps1
-├── compile.sh
-├── clean.sh
-├── clean.bat
 └── AGENTS.md
 ```
 
-## 🚀 快速开始
+## 迁移说明
 
-### 编译并运行（推荐）
+- 原 `basics-test`、`hello-intellij`、`oop-practice` 示例已迁移到 `javawork/src/legacy/...`。
+- `exercise2` 仅包含空模块定义，整理时已移除。
+- 顶层旧脚本和历史残留目录已删除，后续直接在 `javawork` 下手动编译、运行和清理。
+
+## 手动使用
+
+### 编译
+
+在 `javawork` 目录下执行：
+
 ```powershell
-pwsh ./run_all.ps1
+Remove-Item -Recurse -Force out -ErrorAction SilentlyContinue
+$sources = Get-ChildItem -Recurse -Filter *.java | ForEach-Object { $_.FullName }
+javac -d out $sources
 ```
 
-### 仅编译
-```bash
-./compile.sh javawork
-# 或
-./compile.sh all
+### 运行
+
+编译完成后，用下面的格式运行主类：
+
+```powershell
+java -cp out <主类全限定名>
+```
+
+示例：
+
+```powershell
+java -cp out javawork.E
+java -cp out legacy.hello.Main
 ```
 
 ### 清理产物
-```bash
-./clean.sh
+
+在 `javawork` 目录下删除编译输出目录：
+
+```powershell
+Remove-Item -Recurse -Force out -ErrorAction SilentlyContinue
 ```
 
-```bat
-clean.bat
-```
-
-## 🧩 迁移说明
-
-- 原 `basics-test`、`hello-intellij`、`oop-practice` 示例已迁移到 `javawork/src/legacy/...`。
-- `exercise2` 仅包含空模块定义，已并入整理流程后移除。
-- 运行入口已在 `run_all.ps1` 中统一维护。
+如果工作区里以后再次出现其他编译产物，也可以一并删除 `out_tmp/`、`bin/` 和零散 `.class` 文件。
