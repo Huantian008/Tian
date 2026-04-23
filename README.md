@@ -1,35 +1,40 @@
-# Tian Code Playground
+# Tian Practice Repository
 
-个人练习仓库，按语言分目录组织，便于定位与维护。
+这是一个按语言分类的个人练习仓库，当前只保留以下五类代码目录：
 
-## 目录结构
+- `c`
+- `cpp`
+- `java`
+- `python`
+- `web`
 
-- `Java/`
-  - `javawork/`：Java 主练习模块（含 `legacy/` 历史示例）
-- `cpp/`
-  - `exercises/`：C++ 语法练习与算法题
-  - `book-of-cpp/`：书籍章节练习
-  - `oj/`：在线评测题解
-  - `cmake/`：CMake 示例
-- `c/`
-  - `src/`：C 语言基础练习
-- `python/`
-  - Python 学习脚本
-- `web/`
-  - `frontend/`：静态前端资源
-  - `backend/`：Node.js/Express 示例
-  - `homework/`：归并后的网页作业目录（保留原项目名：`web`、`web2`、`web3`、`web4`、`web-big homework`、`work`、`Markdown`）
-- `tools/`
-  - `scratch/`：临时测试目录（如 `.tmp_vsc_lang_test`）
+## 目录说明
 
-## 使用说明
+### `c/`
+C 语言基础练习代码，当前主要在 `c/src`。
 
-- **Java**：进入 `Java/` 后运行 `pwsh ./run_all.ps1`。
-- **C / C++**：按子目录构建；构建输出目录不纳入版本控制。
-- **Web 后端**：进入 `web/backend` 执行 `npm install` 与 `npm run dev`。
-- **Web 作业**：进入 `web/homework` 访问各子项目目录。
+### `cpp/`
+C++ 练习与题解集合，包含：
+- `book-of-cpp/`：书籍章节练习
+- `exercises/`：语法与小练习
+- `LeetCode/`：LeetCode 题解
+- `oj/`：在线评测题目
 
-## 仓库规范
+### `java/`
+Java 练习代码与脚本，主要模块位于 `java/javawork`。
 
-- `.gitignore` 已配置忽略依赖、编译输出和 IDE 生成文件。
-- 新增练习建议放到现有语言目录下，并补充简要说明。
+### `python/`
+Python 学习与作业脚本，含部分爬虫与数据文件。
+
+### `web/`
+Web 相关练习（HTML/CSS/JS 与课程作业），包括：
+- `Homework/`
+- `Project/`
+- `kuolie-card/`
+- `js/`（原根目录 `js` 已迁入此处）
+
+## 使用建议
+
+- 以目录为单位独立运行练习代码，互不影响。
+- 新增代码请放入对应语言目录，避免在仓库根目录新增零散项目。
+- 提交前建议先确认路径归类是否正确，再进行 commit。
