@@ -1,4 +1,4 @@
-# Dependency directories
+忽略# Dependency directories
 node_modules/
 
 # Build outputs
@@ -43,3 +43,5 @@ python/第九组-学生成绩管理系统.zip
 
 # Local scratch / temporary merged dirs
 tools/scratch/
+.claude/worktrees/quizzical-jones
+.claude/worktrees/quizzical-jones
