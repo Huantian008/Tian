@@ -1,80 +1,68 @@
 # C++ 学习代码
 
-简洁的 C++ 代码仓库，已统一 UTF-8 编码，解决中文乱码问题。
+这个目录主要用来放 C++ 学习和刷题代码，按题源分组，尽量只保留源码、头文件、VS Code 配置和工具脚本。
 
-## 📁 目录结构
+## 目录结构
 
-```
+```text
 cpp/
-├── LeetCode/          # LeetCode 题解（3 个）
-├── book-of-cpp/       # 教程示例（6 个）
-├── exercises/         # 练习题（25 个）
-├── oj/               # 在线评测（3 个）
-├── include/          # 头文件和模板
-│   ├── utf8_console.hpp      # UTF-8 支持
-│   ├── cpp_template.cpp      # 代码模板
-│   └── README_中文输出指南.md
-├── tools/            # 工具脚本
-│   ├── fix_encoding.py       # 编码修复
-│   └── clean.sh              # 清理工具
-├── .vscode/          # VS Code 配置
-└── 文档
-    ├── README.md              # 本文档
-    ├── README_ENCODING.md    # 编码详细说明
-    └── CLEANUP_REPORT.md      # 清理报告
+├── .vscode/          # VS Code 构建、运行、调试配置
+├── book-of-cpp/      # 教材/教程示例
+├── cmake/            # CMake 最小示例
+├── exercises/        # 日常练习题
+├── include/          # 通用头文件和模板
+├── LeetCode/         # LeetCode 题解
+├── oj/               # OJ 题目
+├── output/           # 根目录源码的编译输出（按需生成）
+├── tools/            # 清理和编码辅助脚本
+├── CLEANUP_REPORT.md
+├── README_ENCODING.md
+└── README.md
 ```
 
-## ✨ 特性
+说明：
 
-- ✅ 所有文件统一 UTF-8 编码
-- ✅ 换行符统一为 LF
-- ✅ 包含中文的程序已添加编译器指令
-- ✅ 移除平台特定代码，跨平台兼容
+- `output/` 和各题目目录下的 `output/` 都属于编译产物目录，可以清空。
+- `Code Runner` 和 VS Code 任务会在当前源文件所在目录下自动创建 `output/`。
+- `.exe`、编译日志、运行日志都不建议长期保留在源码旁边。
 
-## 🚀 快速开始
+## 当前整理规则
 
-### 编译运行
-```bash
-g++ your_file.cpp -o output
-./output
-```
+- 保留：`.cpp`、`.h`、`.hpp`、工具脚本、VS Code 配置、说明文档
+- 清理：`.exe`、编译日志、运行日志、临时输出文件
+- 异常文件：类似 `nul`、单独的二进制残留，会直接移除
 
-### 中文输出（Windows）
-包含头文件并在 main 函数开头调用：
-```cpp
-#include "include/utf8_console.hpp"
+## 常用方式
 
-int main() {
-    init_utf8_console();
-    std::cout << "你好，世界！" << std::endl;
-    return 0;
-}
-```
+### VS Code 任务
 
-## 🛠️ 工具
+- `C++: Build active file`
+- `C++: Run active file`
+- `C++: Build and run active file`
 
-### 修复编码
-```bash
-python3 tools/fix_encoding.py
-```
+输出位置统一为当前源码目录下的 `output/`。
+
+### Code Runner
+
+当前工作区已经配置好：
+
+- `C` 使用 `tools/code-runner-c.ps1`
+- `C++` 使用 `tools/code-runner-cpp.ps1`
+
+会自动编译到当前源码目录下的 `output/`，并带时间戳命名。
 
 ### 清理临时文件
+
+在 `E:\code\cpp` 下执行：
+
 ```bash
 bash tools/clean.sh
 ```
 
-## 📖 文档
+## 统计
 
-- [README_ENCODING.md](README_ENCODING.md) - 编码详细说明和常见问题
-- [CLEANUP_REPORT.md](CLEANUP_REPORT.md) - 文件夹清理报告
-- [include/README_中文输出指南.md](include/README_中文输出指南.md) - 中文输出详细指南
+- `.cpp` 源文件：45 个
+- 头文件：2 个（`.h` / `.hpp`）
+- 说明文档：4 个
 
-## 📊 统计
-
-- 源文件：43 个
-- 头文件：1 个
-- 总文件数：46 个
-
----
-
-使用 VS Code 打开，配置已包含 UTF-8 支持！
+整体目标是让这个目录长期保持“源码和工具分开、生成物可随时清掉”的状态。

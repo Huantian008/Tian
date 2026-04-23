@@ -14,3 +14,52 @@ Testing relies on console runners located in `basics-test/src/test`, `oop-practi
 
 ## Commit & Pull Request Guidelines
 Existing history favors short, imperative subjects (“Move LeetCode sources into cpp folder”), so continue that tone and note the touched module upfront (`javawork: add StudentID validator`). Commits and PRs should state motivation, list the commands executed (`pwsh ./run_all.ps1`, targeted `java` runs), and link an issue when available. Include screenshots only when editing the `web/` subtree; for Java changes, paste the relevant console output to help reviewers reproduce results.
+
+## Local Environment Snapshot (Windows)
+Last verified: 2026-03-02
+
+- JDK (default): `C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot`
+- `JAVA_HOME` (User/Machine): `C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot`
+- IntelliJ SDK in use: JDK `21` (JavaSDK)
+- Extra JDK candidates:
+  - `E:\work\Java` (Oracle JDK 23)
+  - `E:\idea\IntelliJ IDEA 2025.2.1\jbr` (JBR 21)
+
+- Tomcat (configured): `E:\work\Java\Tomcat\apache-tomcat-10.1.34-windows-x64\apache-tomcat-10.1.34`
+- `CATALINA_HOME`/`CATALINA_BASE` (User): above path
+- User PATH includes: `%CATALINA_HOME%\bin`
+- Tomcat version check: `Apache Tomcat/10.1.34`
+
+- Maven (configured): `E:\idea\IntelliJ IDEA 2025.2.1\plugins\maven\lib\maven3`
+- `M2_HOME` (User): above path
+- User PATH includes: `%M2_HOME%\bin`
+- Maven version check: `Apache Maven 3.9.9`
+
+### IntelliJ User Config Notes
+- Config root: `C:\Users\y2003\AppData\Roaming\JetBrains\IntelliJIdea2025.2\options`
+- Applied style close to VS Code:
+  - Editor/Console/Terminal font: `Consolas`, size `14`, line spacing `1.2`
+  - UI font: `Segoe UI`, size `13`
+  - Dark theme enabled (`Darcula` / `JetBrainsDarkTheme`)
+- Related files:
+  - `editor-font.xml`
+  - `console-font.xml`
+  - `terminal-font.xml`
+  - `ui.lnf.xml`
+  - `other.xml`
+  - `jdk.table.xml`
+  - `project.default.xml`
+
+### Session Bootstrap Commands
+Run these first in a new session to confirm environment:
+
+```powershell
+java -version
+javac -version
+echo $env:JAVA_HOME
+echo $env:CATALINA_HOME
+echo $env:M2_HOME
+mvn -v
+```
+
+If terminal variables are stale, reopen terminal/IDE once before troubleshooting.

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户注册页面</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>用户注册页面</h1>
+
+    <form id="registerForm" novalidate>
+      <p>
+        <label for="username">用户名：</label>
+        <input id="username" name="username" type="text">
+      </p>
+      <p id="usernameError" class="error"></p>
+
+      <p>
+        <label for="password">密 码：</label>
+        <input id="password" name="password" type="password">
+      </p>
+
+      <p>
+        <label for="major">专 业：</label>
+        <select id="major" name="major">
+          <option value="web">Web前端开发</option>
+          <option value="java">Java开发</option>
+          <option value="ui">UI设计</option>
+        </select>
+      </p>
+
+      <p>
+        <span>性 别：</span>
+        <label><input type="radio" name="gender" value="男" checked> 男</label>
+        <label><input type="radio" name="gender" value="女"> 女</label>
+      </p>
+
+      <p>
+        <span>爱 好：</span>
+        <label><input type="checkbox" name="hobby" value="HTML"> HTML</label>
+        <label><input type="checkbox" name="hobby" value="CSS"> CSS</label>
+        <label><input type="checkbox" name="hobby" value="JavaScript"> JavaScript</label>
+      </p>
+
+      <p>
+        <button type="submit">提交</button>
+        <button type="reset">重置</button>
+      </p>
+    </form>
+
+    <p id="submitMessage" class="success"></p>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

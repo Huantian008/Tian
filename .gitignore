@@ -4,6 +4,11 @@ node_modules/
 # Build outputs
 **/bin/
 **/output/
+**/out/
+**/out_tmp/
+/build/
+/cpp/cmake/build/
+/cpp/cmake/app
 
 # Compiled binaries
 **/*.class
@@ -35,3 +40,6 @@ env/
 
 # Ignore student system zip
 python/第九组-学生成绩管理系统.zip
+
+# Local scratch / temporary merged dirs
+tools/scratch/

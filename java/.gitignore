@@ -4,6 +4,7 @@
 # Build output directories
 bin/
 out/
+out_tmp/
 
 # IntelliJ project files
 .idea/

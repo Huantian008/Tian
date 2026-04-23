@@ -33,36 +33,27 @@ function Invoke-Step {
     }
 }
 
-# basics-test
-Invoke-Step -WorkDir 'basics-test' -Description 'Compile' -Command {
-    Remove-Item -Force -Recurse out -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Name out | Out-Null
-    javac -d out (Get-ChildItem -Recurse -Filter *.java | ForEach-Object { $_.FullName })
-}
-Invoke-Step -WorkDir 'basics-test' -Description 'Run Mankind' -Command { java -cp out Mankind }
-Invoke-Step -WorkDir 'basics-test' -Description 'Run work4' -Command { java -cp out work4 }
-Invoke-Step -WorkDir 'basics-test' -Description 'Run test.Employee' -Command { "10`n5`n+`n" | java -cp out test.Employee }
-Invoke-Step -WorkDir 'basics-test' -Description 'Run test.ArraySearchExample' -Command { "2`n4`n*`n" | java -cp out test.ArraySearchExample }
-Invoke-Step -WorkDir 'basics-test' -Description 'Run test.FactorialSum' -Command { java -cp out test.FactorialSum }
-Invoke-Step -WorkDir 'basics-test' -Description 'Run test.HuanTian' -Command { java -cp out test.HuanTian }
-Invoke-Step -WorkDir 'basics-test' -Description 'Run test.RunnoobTest' -Command { java -cp out test.RunnoobTest }
-Invoke-Step -WorkDir 'basics-test' -Description 'Run test.test2' -Command { java -cp out test.test2 }
-Invoke-Step -WorkDir 'basics-test' -Description 'Run test2.work4' -Command { java -cp out test2.work4 }
-
-# hello-intellij
-Invoke-Step -WorkDir 'hello-intellij' -Description 'Compile' -Command {
-    Remove-Item -Force -Recurse out -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Name out | Out-Null
-    javac -d out (Get-ChildItem -Recurse -Filter *.java | ForEach-Object { $_.FullName })
-}
-Invoke-Step -WorkDir 'hello-intellij' -Description 'Run Main' -Command { java -cp out Main }
-
 # javawork
 Invoke-Step -WorkDir 'javawork' -Description 'Compile' -Command {
     Remove-Item -Force -Recurse out -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Name out | Out-Null
     javac -d out (Get-ChildItem -Recurse -Filter *.java | ForEach-Object { $_.FullName })
 }
+
+# migrated legacy demos
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.Mankind' -Command { java -cp out legacy.basics.Mankind }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.work4' -Command { java -cp out legacy.basics.work4 }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.test.Employee' -Command { "10`n5`n+`n" | java -cp out legacy.basics.test.Employee }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.test.ArraySearchExample' -Command { "2`n4`n*`n" | java -cp out legacy.basics.test.ArraySearchExample }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.test.FactorialSum' -Command { java -cp out legacy.basics.test.FactorialSum }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.test.HuanTian' -Command { java -cp out legacy.basics.test.HuanTian }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.test.RunnoobTest' -Command { java -cp out legacy.basics.test.RunnoobTest }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.test.test2' -Command { java -cp out legacy.basics.test.test2 }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.basics.test2.work4' -Command { java -cp out legacy.basics.test2.work4 }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.hello.Main' -Command { java -cp out legacy.hello.Main }
+Invoke-Step -WorkDir 'javawork' -Description 'Run legacy.oop.test.test1' -Command { java -cp out legacy.oop.test.test1 }
+
+# javawork demos
 Invoke-Step -WorkDir 'javawork' -Description 'Run javawork.E' -Command { java -cp out javawork.E }
 Invoke-Step -WorkDir 'javawork' -Description 'Run javawork.Plant' -Command { java -cp out javawork.Plant }
 Invoke-Step -WorkDir 'javawork' -Description 'Run javawork.work1' -Command { java -cp out javawork.work1 }
@@ -76,12 +67,4 @@ Invoke-Step -WorkDir 'javawork' -Description 'Run pack3.c' -Command { java -cp o
 Invoke-Step -WorkDir 'javawork' -Description 'Run javawork3.E' -Command { java -cp out javawork3.E }
 Invoke-Step -WorkDir 'javawork' -Description 'Run javawork4.Vegetable' -Command { java -cp out javawork4.Vegetable }
 
-# oop-practice
-Invoke-Step -WorkDir 'oop-practice' -Description 'Compile' -Command {
-    Remove-Item -Force -Recurse out -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Name out | Out-Null
-    javac -d out (Get-ChildItem -Recurse -Filter *.java | ForEach-Object { $_.FullName })
-}
-Invoke-Step -WorkDir 'oop-practice' -Description 'Run test.test1' -Command { java -cp out test.test1 }
-
-Write-Host 'All projects compiled and executed successfully.'
+Write-Host 'Javawork (including migrated legacy demos) compiled and executed successfully.'
