@@ -1,5 +1,6 @@
 #include<iostream>
 #include<string>
+#include<vector>
 using namespace std;
 
 struct Student
@@ -10,9 +11,12 @@ struct Student
 };
 int main(){
     Student stu;
-    stu.name="张三";
-    stu.id=1001;
-    stu.score=80;
+    vector<Student>students={
+        {"张三",1001,80},
+        {"李四",1002,100},
+        {"王五",1003,90},
+        {"哈基米",1004,100}
+    };
     cout<<"学号"<<stu.id<<endl;
     cout<<"姓名"<<stu.name<<endl;
     cout<<"成绩"<<stu.score<<endl;

@@ -1,18 +1,28 @@
-忽略# Dependency directories
+# Dependency directories
 node_modules/
 
 # Build outputs
 **/bin/
+**/build/
 **/output/
 **/out/
 **/out_tmp/
 /build/
 /cpp/cmake/build/
 /cpp/cmake/app
+**/target/
+**/.gradle/
 
 # Compiled binaries
 **/*.class
 **/*.exe
+**/*.war
+
+# Local app servers / downloaded runtimes
+**/tools/apache-tomcat-*/
+**/tools/*.zip
+**/tools/*.zip.sha512
+**/tools/*.pid
 
 # IDE metadata
 .idea/

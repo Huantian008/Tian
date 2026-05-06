@@ -1,0 +1,84 @@
+<!doctype html><html><head><meta charset='utf-8'><style>
+body {
+  font-family: "Microsoft YaHei", "SimHei", Arial, sans-serif;
+  color: #172033;
+  line-height: 1.7;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 40px;
+}
+h1 { text-align: center; font-size: 30px; margin-bottom: 8px; }
+h3 { border-left: 6px solid #315f8f; padding-left: 10px; margin-top: 28px; }
+h4 { margin-top: 24px; color: #25496f; }
+img { display: block; max-width: 92%; margin: 12px auto 18px; }
+pre {
+  white-space: pre-wrap;
+  background: #f5f7fa;
+  border: 1px solid #d8dee8;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+ul { padding-left: 24px; }
+@page { size: A4; margin: 16mm 14mm; }
+</style></head><body><h1>超市销售数据分析报告</h1>
+<p>学生姓名：杨文天</p><h3>一、需求分析</h3>
+<p>本项目基于超市 2015 年 1 月至 4 月的销售明细数据，目的是从销售规模、品类结构、月份变化和促销效果等角度发现经营特点，为门店备货、促销安排和品类优化提供数据支持。</p>
+<ul>
+<li>分析维度 1：总体经营情况。统计销售金额、销售数量、顾客数、商品数等核心指标，判断数据规模和经营基础。</li>
+<li>分析维度 2：商品大类销售结构。使用各商品大类销售额 Top 图，找出贡献最高的核心品类。</li>
+<li>分析维度 3：月份销售趋势。使用月度销售额折线图，观察 2015 年 1-4 月销售额的波动情况。</li>
+<li>分析维度 4：促销效果与商品类型结构。使用促销对比图和商品类型占比图，分析促销销售贡献和商品类型构成。</li>
+</ul><h3>二、结论</h3>
+<p>本次数据共 42726 条销售记录，覆盖 2612 位顾客、6138 个商品，统计期内总销售额为 454,210.62 元，总销售数量为 51,256.56。</p>
+<ul>
+<li>重点品类集中明显。销售额最高的前五个大类为：日配（81,958.30元）、蔬果（81,375.68元）、休闲（74,145.20元）、粮油（60,931.94元）、酒饮（54,790.90元）。其中日配、蔬果、休闲和粮油是主要销售来源，后续备货和陈列应优先保障这些高贡献品类。</li>
+<li>月份销售存在波动。2015-02 销售额最高，为 139,789.59 元；2015-03 销售额最低，为 94,096.97 元。说明门店销售并非平均分布，应结合节假日、促销和季节变化提前安排库存。</li>
+<li>促销商品销售额为 108,524.02 元，占总销售额约 23.9%。促销有一定带动作用，但非促销销售仍是主要收入来源，促销应重点用于拉动高潜力品类，而不是简单扩大范围。</li>
+<li>商品类型中，一般商品 销售贡献最高，占总销售额约 74.1%。一般商品是稳定收入基础，生鲜类则适合通过新鲜度、陈列和组合促销提升复购。</li>
+</ul><h3>三、过程和思考</h3>
+<p>下面按照“数据读取与预处理、描述统计、可视化分析、分析结论”的流程展开。代码保留完整计算过程，图表后给出对应分析说明。</p><pre><code>import pandas as pd
+import matplotlib.pyplot as plt
+
+plt.rcParams[&quot;font.sans-serif&quot;] = [&quot;Microsoft YaHei&quot;, &quot;SimHei&quot;, &quot;Arial Unicode MS&quot;]
+plt.rcParams[&quot;axes.unicode_minus&quot;] = False</code></pre><pre><code>data_path = &quot;data/supermarket_1.csv&quot;
+df = pd.read_csv(data_path)
+
+if &quot;Unnamed: 0&quot; in df.columns:
+    df = df.drop(columns=[&quot;Unnamed: 0&quot;])
+
+for col in [&quot;销售数量&quot;, &quot;销售金额&quot;, &quot;商品单价&quot;]:
+    df[col] = pd.to_numeric(df[col], errors=&quot;coerce&quot;)
+
+df[&quot;销售日期_转换&quot;] = pd.to_datetime(
+    df[&quot;销售日期&quot;].astype(str),
+    format=&quot;%Y%m%d&quot;,
+    errors=&quot;coerce&quot;
+)
+df[&quot;销售月份_文本&quot;] = df[&quot;销售月份&quot;].astype(str).str[:4] + &quot;-&quot; + df[&quot;销售月份&quot;].astype(str).str[4:]
+
+df.head()</code></pre><pre><code>basic_info = {
+    &quot;记录数&quot;: len(df),
+    &quot;字段数&quot;: df.shape[1],
+    &quot;顾客数&quot;: df[&quot;顾客编号&quot;].nunique(),
+    &quot;商品数&quot;: df[&quot;商品编码&quot;].nunique(),
+    &quot;总销售数量&quot;: df[&quot;销售数量&quot;].sum(),
+    &quot;总销售金额&quot;: df[&quot;销售金额&quot;].sum(),
+    &quot;日期转换异常数&quot;: df[&quot;销售日期_转换&quot;].isna().sum()
+}
+basic_info</code></pre><h4>1：数据读取、描述分析与预处理</h4>
+<p>读取数据后删除原 CSV 中多余的 `Unnamed: 0` 索引列，并将销售数量、销售金额、商品单价转为数值类型。销售日期按 `%Y%m%d` 转换，其中 `20150229` 不是合法日期，转换异常共 2 条；这些记录数量很少，因此保留原始销售月份字段继续做月度分析。</p><pre><code>category_sales = df.groupby(&quot;大类名称&quot;)[&quot;销售金额&quot;].sum().sort_values(ascending=False)
+category_sales.head(10)</code></pre><h4>2.1 商品大类销售额分析</h4>
+<img src="figures/01_各商品大类销售额Top10.png" alt="2.1 商品大类销售额分析">
+<p>从图中可以看出，销售额主要集中在日配、蔬果、休闲、粮油、酒饮等大类。门店应优先保证这些高贡献品类的库存稳定，同时结合货架位置和促销活动提升购买转化。</p><pre><code>month_sales = df.groupby(&quot;销售月份_文本&quot;)[&quot;销售金额&quot;].sum()
+month_sales</code></pre><h4>2.2 月度销售趋势分析</h4>
+<img src="figures/02_月度销售额趋势.png" alt="2.2 月度销售趋势分析">
+<p>从 2015 年 1-4 月看，2015-02 销售额最高，2015-03 销售额最低。销售波动说明门店运营需要按月份提前做备货计划，并关注节假日、季节和促销安排对销售的影响。</p><pre><code>promo_stats = df.groupby(&quot;是否促销&quot;)[[&quot;销售金额&quot;, &quot;销售数量&quot;]].sum()
+promo_stats</code></pre><h4>2.3 促销效果分析</h4>
+<img src="figures/03_促销效果对比.png" alt="2.3 促销效果分析">
+<p>促销销售额占总销售额约 23.9%，说明促销对销售有贡献，但非促销销售仍占主导。后续可把促销资源集中到高毛利、高复购或需要清库存的商品，避免促销投入过于分散。</p><pre><code>type_sales = df.groupby(&quot;商品类型&quot;)[&quot;销售金额&quot;].sum().sort_values(ascending=False)
+type_sales</code></pre><h4>2.4 商品类型结构分析</h4>
+<img src="figures/04_商品类型销售额占比.png" alt="2.4 商品类型结构分析">
+<p>商品类型中，一般商品 的销售额占比最高，是门店收入的主要基础。生鲜类销售额也有明显贡献，应重视保鲜、损耗控制和日常陈列；联营商品占比较低，可结合场地和利润贡献评估是否优化。</p><h3>四、过程反思</h3>
+<p>本次分析先从数据清洗入手，再围绕销售额、品类、月份和促销四个维度进行可视化。分析过程中发现，日期字段存在少量非法日期，因此实际分析时不能盲目直接转换日期，而要先检查异常值。通过图表可以更直观地看到核心销售来源和月份波动，后续如果继续深入，可以增加客单价、复购情况、单品贡献和促销前后对比等分析，使经营建议更加细化。</p></body></html>
