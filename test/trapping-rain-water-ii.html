@@ -4,44 +4,67 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>接雨水 2.0 - Trapping Rain Water II</title>
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
 <style>
   :root {
-    --bg: #e8ecf1;
-    --panel-bg: rgba(255, 255, 255, 0.92);
+    --bg: #f0f2f5;
+    --panel-bg: rgba(255, 255, 255, 0.95);
     --text: #2c3e50;
     --text-secondary: #5a6c7d;
     --accent: #1976d2;
     --gold: #e6a800;
     --danger: #d32f2f;
     --success: #388e3c;
-    --border: rgba(0, 0, 0, 0.1);
+    --border: rgba(0, 0, 0, 0.08);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: var(--bg);
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     color: var(--text);
-    overflow: hidden;
     height: 100vh;
     display: flex;
     flex-direction: column;
     user-select: none;
   }
-  #canvas-container {
+
+  #canvas-wrapper {
     flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
     position: relative;
-    cursor: grab;
+    overflow: hidden;
   }
-  #canvas-container:active { cursor: grabbing; }
-  #canvas-container canvas { display: block; }
+  #grid-canvas {
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    /* cursor: crosshair; */
+  }
+
+  /* Cell tooltip */
+  #cell-info {
+    position: absolute;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.7;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+  #cell-info.visible { opacity: 1; }
+  #cell-info .coord { color: var(--gold); font-weight: 600; }
+  .stat-value {
+    color: var(--accent);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
 
   /* Control bar */
   #controls {
@@ -67,109 +90,37 @@
     min-width: 44px;
     text-align: center;
   }
-  #controls button:hover {
-    background: #e8ecf1;
-    border-color: #b0b8c4;
-  }
+  #controls button:hover { background: #e8ecf1; border-color: #b0b8c4; }
   #controls button:active { transform: scale(0.96); }
-  #controls button:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-  #controls button.primary {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-    font-weight: 600;
-  }
-  #controls button.warn {
-    background: var(--danger);
-    color: #fff;
-    border-color: var(--danger);
-  }
-  #controls .separator {
-    width: 1px; height: 24px;
-    background: #d0d5dd;
-    margin: 0 4px;
-  }
-  #controls label {
-    font-size: 13px;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  #controls input[type="range"] {
-    width: 90px;
-    accent-color: var(--accent);
-  }
+  #controls button:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  #controls button.primary { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  #controls button.warn { background: var(--danger); color: #fff; border-color: var(--danger); }
+  #controls .separator { width: 1px; height: 24px; background: #d0d5dd; margin: 0 4px; }
+  #controls label { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+  #controls input[type="range"] { width: 90px; accent-color: var(--accent); }
   #controls select {
-    background: #f5f6f8;
-    color: var(--text);
-    border: 1px solid #d0d5dd;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
+    background: #f5f6f8; color: var(--text); border: 1px solid #d0d5dd;
+    padding: 8px 12px; border-radius: 8px; font-size: 14px; cursor: pointer;
   }
 
   /* Stats bar */
   #stats {
     display: flex;
     gap: 24px;
-    padding: 8px 24px;
-    background: rgba(255,255,255,0.85);
+    padding: 10px 24px;
+    background: rgba(255,255,255,0.9);
     backdrop-filter: blur(12px);
     font-size: 13px;
     flex-wrap: wrap;
     border-bottom: 1px solid var(--border);
   }
-  #stats .stat {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-secondary);
-  }
-  #stats .stat-value {
-    color: var(--accent);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  }
-
-  /* Cell info tooltip */
-  #cell-info {
-    position: absolute;
-    top: 12px; right: 16px;
-    background: var(--panel-bg);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    font-size: 13px;
-    line-height: 1.7;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  }
-  #cell-info.visible { opacity: 1; }
-  #cell-info .coord { color: var(--gold); font-weight: 600; }
-
-  /* Loading overlay */
-  #loading {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--bg);
-    font-size: 18px; color: var(--text-secondary);
-    z-index: 10;
-  }
+  #stats .stat { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+  #stats .stat-value { color: var(--accent); font-weight: 600; font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; }
 </style>
 </head>
 <body>
-  <div id="canvas-container">
-    <div id="loading">加载中...</div>
+  <div id="canvas-wrapper">
+    <canvas id="grid-canvas"></canvas>
     <div id="cell-info">
       <div>📍 坐标: <span class="coord" id="ci-coord">-</span></div>
       <div>📏 高度: <span class="stat-value" id="ci-height">-</span></div>
@@ -187,11 +138,11 @@
   </div>
 
   <div id="controls">
-    <button id="btn-reset" title="重置">⏮</button>
-    <button id="btn-back" title="后退">◀◀</button>
-    <button id="btn-play" class="primary" title="播放/暂停">▶</button>
-    <button id="btn-forward" title="前进">⏭</button>
-    <button id="btn-finish" title="快进到结束">▶▶</button>
+    <button id="btn-reset" title="重置 (R)">⏮ 重置</button>
+    <button id="btn-back" title="后退 (←)">◀◀</button>
+    <button id="btn-play" class="primary" title="播放/暂停 (空格)">▶ 播放</button>
+    <button id="btn-forward" title="前进 (→)">⏭</button>
+    <button id="btn-finish" title="快进 (F)">▶▶ 快进</button>
 
     <div class="separator"></div>
 
@@ -212,19 +163,16 @@
     </label>
     <button id="btn-random" class="warn">🔄 随机生成</button>
   </div>
+
 <script>
+// ==================== MinHeap ====================
 class MinHeap {
-  constructor() {
-    this.heap = [];
-  }
-
+  constructor() { this.heap = []; }
   size() { return this.heap.length; }
-
   push(item) {
     this.heap.push(item);
     this._bubbleUp(this.heap.length - 1);
   }
-
   pop() {
     if (this.heap.length === 1) return this.heap.pop();
     const top = this.heap[0];
@@ -232,39 +180,30 @@ class MinHeap {
     this._sinkDown(0);
     return top;
   }
-
-  peek() {
-    return this.heap.length > 0 ? this.heap[0] : null;
-  }
-
+  peek() { return this.heap.length > 0 ? this.heap[0] : null; }
   _bubbleUp(i) {
     while (i > 0) {
-      const parent = (i - 1) >> 1;
-      if (this.heap[i].h >= this.heap[parent].h) break;
-      [this.heap[i], this.heap[parent]] = [this.heap[parent], this.heap[i]];
-      i = parent;
+      const p = (i - 1) >> 1;
+      if (this.heap[i].h >= this.heap[p].h) break;
+      [this.heap[i], this.heap[p]] = [this.heap[p], this.heap[i]];
+      i = p;
     }
   }
-
   _sinkDown(i) {
     const n = this.heap.length;
     while (true) {
-      let smallest = i;
-      const l = (i << 1) + 1;
-      const r = (i << 1) + 2;
-      if (l < n && this.heap[l].h < this.heap[smallest].h) smallest = l;
-      if (r < n && this.heap[r].h < this.heap[smallest].h) smallest = r;
-      if (smallest === i) break;
-      [this.heap[i], this.heap[smallest]] = [this.heap[smallest], this.heap[i]];
-      i = smallest;
+      let s = i;
+      const l = (i << 1) + 1, r = (i << 1) + 2;
+      if (l < n && this.heap[l].h < this.heap[s].h) s = l;
+      if (r < n && this.heap[r].h < this.heap[s].h) s = r;
+      if (s === i) break;
+      [this.heap[i], this.heap[s]] = [this.heap[s], this.heap[i]];
+      i = s;
     }
-  }
-
-  snapshot() {
-    return this.heap.map(item => ({ ...item }));
   }
 }
 
+// ==================== RainWaterEngine ====================
 class RainWaterEngine {
   constructor(heightMap) {
     this.heightMap = heightMap;
@@ -272,10 +211,9 @@ class RainWaterEngine {
     this.n = heightMap[0].length;
     this.reset();
   }
-
   reset() {
-    this.visited = Array.from({ length: this.m }, () => new Array(this.n).fill(false));
-    this.waterMap = Array.from({ length: this.m }, () => new Array(this.n).fill(0));
+    this.visited = Array.from({length: this.m}, () => new Array(this.n).fill(false));
+    this.waterMap = Array.from({length: this.m}, () => new Array(this.n).fill(0));
     this.heap = new MinHeap();
     this.waterLevel = 0;
     this.totalWater = 0;
@@ -283,184 +221,326 @@ class RainWaterEngine {
     this.isComplete = false;
     this._initBoundary();
   }
-
   _initBoundary() {
-    // Handle degenerate grids
     if (this.m <= 2 || this.n <= 2) {
-      // All cells are boundary cells
-      for (let i = 0; i < this.m; i++) {
-        for (let j = 0; j < this.n; j++) {
-          this._pushIfNotVisited(i, j);
-        }
-      }
-      // No interior cells to trap water
-      if (this.m <= 2 && this.n <= 2) {
-        this.isComplete = this.heap.size() === 0;
-      }
+      for (let i = 0; i < this.m; i++)
+        for (let j = 0; j < this.n; j++)
+          this._push(i, j);
       return;
     }
-    for (let j = 0; j < this.n; j++) {
-      this._pushIfNotVisited(0, j);
-      this._pushIfNotVisited(this.m - 1, j);
-    }
-    for (let i = 1; i < this.m - 1; i++) {
-      this._pushIfNotVisited(i, 0);
-      this._pushIfNotVisited(i, this.n - 1);
-    }
+    for (let j = 0; j < this.n; j++) { this._push(0, j); this._push(this.m - 1, j); }
+    for (let i = 1; i < this.m - 1; i++) { this._push(i, 0); this._push(i, this.n - 1); }
   }
-
-  _pushIfNotVisited(r, c) {
+  _push(r, c) {
     if (this.visited[r][c]) return;
     this.visited[r][c] = true;
     this.heap.push({ r, c, h: this.heightMap[r][c] });
   }
-
-  canAdvance() {
-    return !this.isComplete && this.heap.size() > 0;
-  }
-
-  /**
-   * Execute one step. Returns a Step object describing what happened,
-   * or null if the algorithm is done.
-   */
+  canAdvance() { return !this.isComplete && this.heap.size() > 0; }
   step() {
     if (this.isComplete) return null;
-    if (this.heap.size() === 0) {
-      this.isComplete = true;
-      return { type: 'complete', totalWater: this.totalWater };
-    }
-
-    const current = this.heap.pop();
-    this.waterLevel = Math.max(this.waterLevel, current.h);
-
+    if (this.heap.size() === 0) { this.isComplete = true; return { type: 'complete', totalWater: this.totalWater }; }
+    const cur = this.heap.pop();
+    this.waterLevel = Math.max(this.waterLevel, cur.h);
     const step = {
-      type: 'process',
-      cell: { r: current.r, c: current.c },
-      height: current.h,
-      waterLevel: this.waterLevel,
-      neighbors: [],
-      totalWater: this.totalWater,
-      heapSize: this.heap.size(),
-      visitedCount: this._countVisited(),
+      type: 'process', cell: { r: cur.r, c: cur.c }, height: cur.h,
+      waterLevel: this.waterLevel, neighbors: [], totalWater: this.totalWater,
+      heapSize: this.heap.size(), visitedCount: this._countVisited(),
     };
-
-    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
     for (const [dr, dc] of dirs) {
-      const nr = current.r + dr;
-      const nc = current.c + dc;
+      const nr = cur.r + dr, nc = cur.c + dc;
       if (nr < 0 || nr >= this.m || nc < 0 || nc >= this.n) continue;
       if (this.visited[nr][nc]) continue;
-
       this.visited[nr][nc] = true;
       const nh = this.heightMap[nr][nc];
       const water = Math.max(0, this.waterLevel - nh);
-      if (water > 0) {
-        this.waterMap[nr][nc] = water;
-        this.totalWater += water;
-      }
+      if (water > 0) { this.waterMap[nr][nc] = water; this.totalWater += water; }
       this.heap.push({ r: nr, c: nc, h: nh });
-
-      step.neighbors.push({
-        r: nr, c: nc,
-        height: nh,
-        water: water,
-      });
+      step.neighbors.push({ r: nr, c: nc, height: nh, water });
     }
-
     this.stepHistory.push(step);
-    // Update totalWater in snapshot to reflect post-processing value
     step.totalWater = this.totalWater;
     return step;
   }
-
-  /**
-   * Undo the last step. Returns true if a step was undone.
-   */
   undo() {
     if (this.stepHistory.length === 0) return false;
     const step = this.stepHistory.pop();
     this.isComplete = false;
-
-    // Restore the popped cell to the heap
     this.heap.push({ r: step.cell.r, c: step.cell.c, h: step.height });
-    this.waterLevel = this.stepHistory.length > 0
-      ? this.stepHistory[this.stepHistory.length - 1].waterLevel
-      : 0;
-
-    // Undo neighbor processing
+    this.waterLevel = this.stepHistory.length > 0 ? this.stepHistory[this.stepHistory.length - 1].waterLevel : 0;
     for (const nb of step.neighbors) {
       this.visited[nb.r][nb.c] = false;
-      if (nb.water > 0) {
-        this.waterMap[nb.r][nb.c] = 0;
-        this.totalWater -= nb.water;
-      }
+      if (nb.water > 0) { this.waterMap[nb.r][nb.c] = 0; this.totalWater -= nb.water; }
     }
-
     return true;
   }
+  _countVisited() { let c = 0; for (let i = 0; i < this.m; i++) for (let j = 0; j < this.n; j++) if (this.visited[i][j]) c++; return c; }
+}
 
-  _countVisited() {
-    let count = 0;
-    for (let i = 0; i < this.m; i++) {
-      for (let j = 0; j < this.n; j++) {
-        if (this.visited[i][j]) count++;
+// ==================== 2D Canvas Renderer ====================
+class GridRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.cellSize = 0;
+    this.padding = 0;
+    this.highlightCell = null;   // { r, c }
+    this.highlightNeighbors = []; // [{ r, c }]
+    this.pulsePhase = 0;
+    this._animFrame = null;
+    this._animate = this._animate.bind(this);
+  }
+
+  setGrid(m, n) {
+    this.m = m;
+    this.n = n;
+    this._resize();
+  }
+
+  _resize() {
+    const wrapper = this.canvas.parentElement;
+    const maxW = wrapper.clientWidth - 40;
+    const maxH = wrapper.clientHeight - 40;
+    const maxCellByW = (maxW - 100) / this.n;  // 100px for legend/labels
+    const maxCellByH = (maxH - 100) / this.m;
+    this.cellSize = Math.floor(Math.min(maxCellByW, maxCellByH, 80));
+    this.padding = 60;
+    const w = this.n * this.cellSize + this.padding * 2;
+    const h = this.m * this.cellSize + this.padding * 2;
+    this.canvas.width = w;
+    this.canvas.height = h;
+    this.canvas.style.width = w + 'px';
+    this.canvas.style.height = h + 'px';
+  }
+
+  _cellX(c) { return this.padding + c * this.cellSize; }
+  _cellY(r) { return this.padding + r * this.cellSize; }
+  _cellCenterX(c) { return this._cellX(c) + this.cellSize / 2; }
+  _cellCenterY(r) { return this._cellY(r) + this.cellSize / 2; }
+
+  heightColor(h, maxH) {
+    if (maxH === 0) return { r: 76, g: 175, b: 80 };
+    const t = h / maxH;
+    // blue(0) → green → yellow → orange → red(max)
+    let r, g, b;
+    if (t < 0.25) {
+      const s = t / 0.25;
+      r = Math.round(33 + s * (76 - 33));
+      g = Math.round(150 + s * (175 - 150));
+      b = Math.round(243 + s * (80 - 243));
+    } else if (t < 0.5) {
+      const s = (t - 0.25) / 0.25;
+      r = Math.round(76 + s * (255 - 76));
+      g = Math.round(175 + s * (235 - 175));
+      b = Math.round(80 + s * (59 - 80));
+    } else if (t < 0.75) {
+      const s = (t - 0.5) / 0.25;
+      r = Math.round(255 + s * (255 - 255));
+      g = Math.round(235 + s * (152 - 235));
+      b = Math.round(59 + s * (0 - 59));
+    } else {
+      const s = (t - 0.75) / 0.25;
+      r = Math.round(255 + s * (229 - 255));
+      g = Math.round(152 + s * (57 - 152));
+      b = Math.round(0 + s * (53 - 0));
+    }
+    return { r, g, b };
+  }
+
+  draw(engine, animTime) {
+    const ctx = this.ctx;
+    const { m, n, cellSize, padding } = this;
+    const w = n * cellSize + padding * 2;
+    const h = m * cellSize + padding * 2;
+    const maxH = Math.max(...engine.heightMap.flat(), 1);
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Background
+    ctx.fillStyle = '#f8f9fb';
+    ctx.fillRect(0, 0, w, h);
+
+    // Draw cells
+    for (let r = 0; r < m; r++) {
+      for (let c = 0; c < n; c++) {
+        const x = this._cellX(c), y = this._cellY(r);
+        const hgt = engine.heightMap[r][c];
+        const color = this.heightColor(hgt, maxH);
+
+        // Cell fill
+        ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+        ctx.fillRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
+
+        // Cell border
+        ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
+
+        // Height text
+        const isDark = (color.r * 0.299 + color.g * 0.587 + color.b * 0.114) < 140;
+        ctx.fillStyle = isDark ? '#fff' : '#222';
+        ctx.font = `bold ${Math.max(12, cellSize * 0.28)}px 'Segoe UI', system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(hgt, x + cellSize / 2, y + cellSize / 2);
+
+        // Water overlay
+        const water = engine.waterMap[r][c];
+        if (water > 0) {
+          const waterH = Math.min(water / maxH, 1) * cellSize * 0.7;
+          const wy = y + cellSize - 2 - waterH;
+          ctx.fillStyle = 'rgba(33, 150, 243, 0.55)';
+          ctx.fillRect(x + 2, wy, cellSize - 4, waterH);
+
+          // Water amount text
+          if (cellSize > 40) {
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${Math.max(10, cellSize * 0.22)}px 'Segoe UI', system-ui, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`+${water}`, x + cellSize / 2, wy + waterH / 2);
+          }
+        }
+
+        // Visited marker
+        if (engine.visited[r][c]) {
+          ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+          ctx.lineWidth = 2;
+          const mx = x + cellSize * 0.2, my = y + cellSize * 0.2;
+          const ms = cellSize * 0.6;
+          ctx.beginPath();
+          ctx.moveTo(mx + ms * 0.2, my + ms * 0.5);
+          ctx.lineTo(mx + ms * 0.45, my + ms * 0.75);
+          ctx.lineTo(mx + ms * 0.8, my + ms * 0.25);
+          ctx.stroke();
+        }
       }
     }
-    return count;
+
+    // Highlight neighbors (blue dashed)
+    for (const { r, c } of this.highlightNeighbors) {
+      const x = this._cellX(c), y = this._cellY(r);
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([5, 3]);
+      ctx.strokeRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
+      ctx.setLineDash([]);
+    }
+
+    // Highlight current cell (gold pulsing)
+    if (this.highlightCell) {
+      const { r, c } = this.highlightCell;
+      const x = this._cellX(c), y = this._cellY(r);
+      const pulse = Math.sin(animTime * 4) * 0.3 + 0.7;
+      ctx.strokeStyle = `rgba(255, 183, 0, ${pulse})`;
+      ctx.lineWidth = 4;
+      ctx.shadowColor = 'rgba(255, 183, 0, 0.6)';
+      ctx.shadowBlur = 12;
+      ctx.strokeRect(x, y, cellSize, cellSize);
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
+    }
+
+    // Row/col labels
+    ctx.fillStyle = '#8899aa';
+    ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i < n; i++) {
+      ctx.fillText(i, this._cellCenterX(i), padding - 20);
+    }
+    for (let i = 0; i < m; i++) {
+      ctx.fillText(i, padding - 20, this._cellCenterY(i));
+    }
+
+    // Legend
+    const lx = padding, ly = h - padding + 20;
+    const lw = n * cellSize / 5;
+    for (let i = 0; i < 5; i++) {
+      const t = i / 4;
+      const color = this.heightColor(Math.round(t * maxH), maxH);
+      ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+      ctx.fillRect(lx + i * lw, ly, lw, 14);
+    }
+    ctx.fillStyle = '#556';
+    ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`0`, lx, ly + 16);
+    ctx.textAlign = 'right';
+    ctx.fillText(`${maxH}`, lx + 5 * lw, ly + 16);
+    ctx.textAlign = 'center';
+    ctx.fillText('高度', lx + 2.5 * lw, ly + 16);
+  }
+
+  setHighlightCell(r, c) { this.highlightCell = { r, c }; }
+  setHighlightNeighbors(neighbors) { this.highlightNeighbors = neighbors || []; }
+  clearHighlights() { this.highlightCell = null; this.highlightNeighbors = []; }
+
+  getCellFromMouse(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const c = Math.floor((mx - this.padding) / this.cellSize);
+    const r = Math.floor((my - this.padding) / this.cellSize);
+    if (r >= 0 && r < this.m && c >= 0 && c < this.n) return { r, c };
+    return null;
+  }
+
+  startAnimation() {
+    if (this._animFrame) return;
+    this._animate();
+  }
+
+  _animate() {
+    this._animFrame = requestAnimationFrame(this._animate);
+    this.pulsePhase += 0.05;
+  }
+
+  stopAnimation() {
+    if (this._animFrame) { cancelAnimationFrame(this._animFrame); this._animFrame = null; }
   }
 }
 
+// ==================== UIController ====================
 class UIController {
-  constructor(engine, scene, onGenerate) {
+  constructor(engine, renderer, onGenerate) {
     this.engine = engine;
-    this.scene = scene;
+    this.renderer = renderer;
     this.onGenerate = onGenerate;
     this.isPlaying = false;
     this.playTimer = null;
     this.speed = 200;
+    this._animTime = 0;
 
     this._bindElements();
     this._bindEvents();
+    this._startRenderLoop();
     this._updateStats();
     this._updateButtons();
   }
 
   _bindElements() {
-    this.els = {
-      btnReset: document.getElementById('btn-reset'),
-      btnBack: document.getElementById('btn-back'),
-      btnPlay: document.getElementById('btn-play'),
-      btnForward: document.getElementById('btn-forward'),
-      btnFinish: document.getElementById('btn-finish'),
-      btnRandom: document.getElementById('btn-random'),
-      speedSlider: document.getElementById('speed-slider'),
-      gridSize: document.getElementById('grid-size'),
-      stWater: document.getElementById('st-water'),
-      stHeap: document.getElementById('st-heap'),
-      stVisited: document.getElementById('st-visited'),
-      stLevel: document.getElementById('st-level'),
-      stStep: document.getElementById('st-step'),
-      cellInfo: document.getElementById('cell-info'),
-      ciCoord: document.getElementById('ci-coord'),
-      ciHeight: document.getElementById('ci-height'),
-      ciWater: document.getElementById('ci-water'),
-      ciVisited: document.getElementById('ci-visited'),
-      loading: document.getElementById('loading'),
-    };
+    this.els = {};
+    const ids = ['btn-reset','btn-back','btn-play','btn-forward','btn-finish','btn-random',
+      'speed-slider','grid-size','st-water','st-heap','st-visited','st-level','st-step',
+      'cell-info','ci-coord','ci-height','ci-water','ci-visited'];
+    for (const id of ids) this.els[id] = document.getElementById(id);
   }
 
   _bindEvents() {
-    this.els.btnReset.addEventListener('click', () => this._reset());
-    this.els.btnBack.addEventListener('click', () => this._back());
-    this.els.btnPlay.addEventListener('click', () => this._togglePlay());
-    this.els.btnForward.addEventListener('click', () => this._forward());
-    this.els.btnFinish.addEventListener('click', () => this._finish());
-    this.els.btnRandom.addEventListener('click', () => this._randomGenerate());
-    this.els.gridSize.addEventListener('change', () => this._randomGenerate());
-    this.els.speedSlider.addEventListener('input', () => {
-      this.speed = 1000 - (this.els.speedSlider.value - 1) * 100;
+    this.els['btn-reset'].addEventListener('click', () => this._reset());
+    this.els['btn-back'].addEventListener('click', () => this._back());
+    this.els['btn-play'].addEventListener('click', () => this._togglePlay());
+    this.els['btn-forward'].addEventListener('click', () => this._forward());
+    this.els['btn-finish'].addEventListener('click', () => this._finish());
+    this.els['btn-random'].addEventListener('click', () => this._randomGenerate());
+    this.els['grid-size'].addEventListener('change', () => this._randomGenerate());
+    this.els['speed-slider'].addEventListener('input', () => {
+      this.speed = 1000 - (this.els['speed-slider'].value - 1) * 100;
     });
-    this.speed = 1000 - (this.els.speedSlider.value - 1) * 100;
+    this.speed = 1000 - (this.els['speed-slider'].value - 1) * 100;
 
     window.addEventListener('keydown', (e) => {
       switch (e.key) {
@@ -472,22 +552,38 @@ class UIController {
       }
     });
 
-    this.scene.renderer.domElement.addEventListener('click', (e) => {
-      const data = this.scene.getIntersection(e);
-      if (data && data.type === 'pillar') {
-        this._showCellInfo(data.r, data.c);
+    this.renderer.canvas.addEventListener('click', (e) => {
+      const cell = this.renderer.getCellFromMouse(e);
+      if (cell) this._showCellInfo(cell.r, cell.c);
+    });
+
+    this.renderer.canvas.addEventListener('mousemove', (e) => {
+      const cell = this.renderer.getCellFromMouse(e);
+      if (cell) {
+        this.els['cell-info'].style.left = (e.clientX - this.renderer.canvas.getBoundingClientRect().left + 18) + 'px';
+        this.els['cell-info'].style.top = (e.clientY - this.renderer.canvas.getBoundingClientRect().top - 80) + 'px';
+        this._showCellInfo(cell.r, cell.c);
       }
     });
 
-    window.addEventListener('resize', () => this.scene.onResize());
+    this.renderer.canvas.addEventListener('mouseleave', () => {
+      this.els['cell-info'].classList.remove('visible');
+    });
+  }
+
+  _startRenderLoop() {
+    const loop = () => {
+      this._animTime = performance.now() * 0.001;
+      this.renderer.draw(this.engine, this._animTime);
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
   }
 
   _reset() {
     this._stopPlay();
     this.engine.reset();
-    this._syncSceneFull();
-    this.scene.clearHighlight();
-    this.scene.clearNeighborHighlights();
+    this.renderer.clearHighlights();
     this._updateStats();
     this._updateButtons();
   }
@@ -495,7 +591,7 @@ class UIController {
   _back() {
     this._stopPlay();
     if (this.engine.undo()) {
-      this._syncSceneFull();
+      this.renderer.clearHighlights();
       this._updateStats();
       this._updateButtons();
     }
@@ -504,24 +600,19 @@ class UIController {
   _forward() {
     if (!this.engine.canAdvance()) return;
     const step = this.engine.step();
-    if (!step) return;
-    this._applyStepVisual(step);
+    if (!step || step.type === 'complete') { this._updateStats(); this._updateButtons(); return; }
+    this.renderer.setHighlightCell(step.cell.r, step.cell.c);
+    this.renderer.setHighlightNeighbors(step.neighbors);
     this._updateStats();
     this._updateButtons();
   }
 
-  _togglePlay() {
-    if (this.isPlaying) {
-      this._stopPlay();
-    } else {
-      this._startPlay();
-    }
-  }
+  _togglePlay() { this.isPlaying ? this._stopPlay() : this._startPlay(); }
 
   _startPlay() {
     if (!this.engine.canAdvance()) return;
     this.isPlaying = true;
-    this.els.btnPlay.textContent = '⏸';
+    this.els['btn-play'].textContent = '⏸ 暂停';
     this._playLoop();
   }
 
@@ -529,25 +620,17 @@ class UIController {
     this.isPlaying = false;
     if (this.playTimer) clearTimeout(this.playTimer);
     this.playTimer = null;
-    this.els.btnPlay.textContent = '▶';
+    this.els['btn-play'].textContent = '▶ 播放';
   }
 
   _playLoop() {
     if (!this.isPlaying) return;
-    if (!this.engine.canAdvance()) {
-      this._stopPlay();
-      this._updateButtons();
-      return;
-    }
+    if (!this.engine.canAdvance()) { this._stopPlay(); this._updateButtons(); return; }
     const step = this.engine.step();
-    if (step && step.type === 'complete') {
-      this._stopPlay();
-      this._updateStats();
-      this._updateButtons();
-      return;
-    }
+    if (step && step.type === 'complete') { this._stopPlay(); this._updateStats(); this._updateButtons(); return; }
     if (step) {
-      this._applyStepVisual(step);
+      this.renderer.setHighlightCell(step.cell.r, step.cell.c);
+      this.renderer.setHighlightNeighbors(step.neighbors);
       this._updateStats();
     }
     this.playTimer = setTimeout(() => this._playLoop(), this.speed);
@@ -555,86 +638,47 @@ class UIController {
 
   _finish() {
     this._stopPlay();
-    while (this.engine.canAdvance()) {
-      this.engine.step();
-    }
-    this._syncSceneFull();
+    while (this.engine.canAdvance()) this.engine.step();
+    this.renderer.clearHighlights();
     this._updateStats();
     this._updateButtons();
   }
 
-  _applyStepVisual(step) {
-    if (step.type === 'complete') return;
-
-    this.scene.highlightCell(step.cell.r, step.cell.c);
-    this.scene.highlightNeighbors(step.neighbors);
-
-    const scale = 0.38;
-    for (const nb of step.neighbors) {
-      if (nb.water > 0) {
-        this.scene.updateWater(nb.r, nb.c, nb.water, scale);
-      }
-      this.scene.markVisited(nb.r, nb.c);
-    }
-  }
-
-  _syncSceneFull() {
-    const scale = 0.38;
-    for (let r = 0; r < this.engine.m; r++) {
-      for (let c = 0; c < this.engine.n; c++) {
-        const mesh = this.scene.cellMeshes[r]?.[c];
-        if (this.engine.waterMap[r][c] > 0) {
-          this.scene.updateWater(r, c, this.engine.waterMap[r][c], scale);
-        } else if (mesh) {
-          mesh.water.visible = false;
-        }
-        if (this.engine.visited[r][c]) {
-          this.scene.markVisited(r, c);
-        }
-      }
-    }
-  }
-
   _randomGenerate() {
     this._stopPlay();
-    const size = parseInt(this.els.gridSize.value);
+    const size = parseInt(this.els['grid-size'].value);
     this.onGenerate(size);
+    this.renderer.clearHighlights();
     this._updateStats();
     this._updateButtons();
   }
 
   _updateStats() {
-    this.els.stWater.textContent = this.engine.totalWater;
-    this.els.stHeap.textContent = this.engine.heap.size();
-    this.els.stVisited.textContent = this.engine._countVisited();
-    this.els.stLevel.textContent = this.engine.waterLevel;
-    this.els.stStep.textContent = this.engine.stepHistory.length;
+    this.els['st-water'].textContent = this.engine.totalWater;
+    this.els['st-heap'].textContent = this.engine.heap.size();
+    this.els['st-visited'].textContent = this.engine._countVisited();
+    this.els['st-level'].textContent = this.engine.waterLevel;
+    this.els['st-step'].textContent = this.engine.stepHistory.length;
   }
 
   _updateButtons() {
-    this.els.btnForward.disabled = !this.engine.canAdvance();
-    this.els.btnFinish.disabled = !this.engine.canAdvance();
-    this.els.btnBack.disabled = this.engine.stepHistory.length === 0;
+    this.els['btn-forward'].disabled = !this.engine.canAdvance();
+    this.els['btn-finish'].disabled = !this.engine.canAdvance();
+    this.els['btn-back'].disabled = this.engine.stepHistory.length === 0;
   }
 
   _showCellInfo(r, c) {
-    const info = this.els;
-    info.ciCoord.textContent = `(${r}, ${c})`;
-    info.ciHeight.textContent = this.engine.heightMap[r][c];
-    info.ciWater.textContent = this.engine.waterMap[r][c];
-    info.ciVisited.textContent = this.engine.visited[r][c] ? '✅ 是' : '❌ 否';
-    info.cellInfo.classList.add('visible');
+    this.els['ci-coord'].textContent = `(${r}, ${c})`;
+    this.els['ci-height'].textContent = this.engine.heightMap[r][c];
+    this.els['ci-water'].textContent = this.engine.waterMap[r][c];
+    this.els['ci-visited'].textContent = this.engine.visited[r][c] ? '✅ 是' : '❌ 否';
+    this.els['cell-info'].classList.add('visible');
     clearTimeout(this._cellInfoTimer);
-    this._cellInfoTimer = setTimeout(() => {
-      info.cellInfo.classList.remove('visible');
-    }, 3000);
-  }
-
-  hideLoading() {
-    this.els.loading.style.display = 'none';
+    this._cellInfoTimer = setTimeout(() => this.els['cell-info'].classList.remove('visible'), 2000);
   }
 }
 
+// ==================== Main ====================
 function generateRandomHeightMap(size) {
   const map = [];
   for (let i = 0; i < size; i++) {
@@ -649,369 +693,28 @@ function generateRandomHeightMap(size) {
   return map;
 }
 
-let engine;
-let scene3d;
-let ui;
+let engine, renderer, ui;
 
 function init() {
-  const container = document.getElementById('canvas-container');
-  scene3d = new Scene3D(container);
-
+  const canvas = document.getElementById('grid-canvas');
   const size = 8;
   const heightMap = generateRandomHeightMap(size);
   engine = new RainWaterEngine(heightMap);
-  scene3d.buildHeightMap(heightMap);
 
-  ui = new UIController(engine, scene3d, (newSize) => {
+  renderer = new GridRenderer(canvas);
+  renderer.setGrid(size, size);
+  renderer.startAnimation();
+
+  ui = new UIController(engine, renderer, (newSize) => {
     const newMap = generateRandomHeightMap(newSize);
     engine = new RainWaterEngine(newMap);
-    scene3d.buildHeightMap(newMap);
+    renderer.setGrid(newSize, newSize);
     ui.engine = engine;
     ui._updateStats();
     ui._updateButtons();
   });
-
-  ui.hideLoading();
 }
 
-</script>
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-class Scene3D {
-  constructor(container) {
-    this.container = container;
-    this.cellMeshes = [];
-    this.groundLine = null;
-    this.currentHighlight = null;
-    this.neighborHighlights = [];
-
-    this._initScene();
-    this._initLights();
-    this._initCamera();
-    this._initControls();
-    this._initRaycaster();
-    this._animate = this._animate.bind(this);
-    requestAnimationFrame(this._animate);
-  }
-
-  _initScene() {
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color('#e8ecf1');
-    this.scene.fog = new THREE.Fog('#e8ecf1', 20, 80);
-
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.container.appendChild(this.renderer.domElement);
-  }
-
-  _initLights() {
-    const ambient = new THREE.AmbientLight('#ffffff', 3.0);
-    this.scene.add(ambient);
-
-    const sun = new THREE.DirectionalLight('#ffffff', 4.5);
-    sun.position.set(10, 20, 8);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.near = 0.5;
-    sun.shadow.camera.far = 80;
-    sun.shadow.camera.left = -20;
-    sun.shadow.camera.right = 20;
-    sun.shadow.camera.top = 20;
-    sun.shadow.camera.bottom = -20;
-    sun.shadow.bias = -0.0001;
-    this.scene.add(sun);
-
-    const fill = new THREE.DirectionalLight('#8899cc', 1.2);
-    fill.position.set(-5, 3, -5);
-    this.scene.add(fill);
-  }
-
-  _initCamera() {
-    this.camera = new THREE.PerspectiveCamera(
-      50,
-      this.container.clientWidth / this.container.clientHeight,
-      0.5,
-      100
-    );
-    this.camera.position.set(12, 14, 12);
-    this.camera.lookAt(4, 0, 4);
-  }
-
-  _initControls() {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
-    this.controls.target.set(3.5, 0, 3.5);
-    this.controls.minDistance = 4;
-    this.controls.maxDistance = 30;
-    this.controls.maxPolarAngle = Math.PI / 2.15;
-    this.controls.update();
-  }
-
-  _initRaycaster() {
-    this.raycaster = new THREE.Raycaster();
-    this.mouse = new THREE.Vector2();
-  }
-
-  buildHeightMap(heightMap) {
-    this._clearScene();
-    const m = heightMap.length;
-    const n = heightMap[0].length;
-    const maxH = Math.max(...heightMap.flat(), 1);
-
-    // Ground
-    const groundGeo = new THREE.PlaneGeometry(n + 2, m + 2);
-    const groundMat = new THREE.MeshStandardMaterial({
-      color: '#d5dbe3',
-      roughness: 0.6,
-      metalness: 0.05,
-    });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.set((n - 1) / 2, -0.05, (m - 1) / 2);
-    ground.receiveShadow = true;
-    this.scene.add(ground);
-
-    // Grid lines
-    const gridHelper = new THREE.PolarGridHelper(
-      Math.max(m, n) * 0.9, 64, Math.max(m, n),
-      64, '#bcc4cf', '#d5dbe3'
-    );
-    gridHelper.position.set((n - 1) / 2, 0, (m - 1) / 2);
-    this.scene.add(gridHelper);
-
-    // Build pillars
-    this.cellMeshes = [];
-    const scale = 0.38;
-
-    for (let r = 0; r < m; r++) {
-      this.cellMeshes[r] = [];
-      for (let c = 0; c < n; c++) {
-        const h = heightMap[r][c];
-        const pillarH = Math.max(h * scale, 0.1);
-        const color = this._heightColor(h, maxH);
-
-        const geo = new THREE.BoxGeometry(0.9, pillarH, 0.9);
-        const mat = new THREE.MeshStandardMaterial({
-          color,
-          roughness: 0.25,
-          metalness: 0.05,
-          emissive: color,
-          emissiveIntensity: 0.15,
-        });
-        const pillar = new THREE.Mesh(geo, mat);
-        pillar.position.set(c, pillarH / 2, r);
-        pillar.castShadow = true;
-        pillar.receiveShadow = true;
-        pillar.userData = { r, c, height: h, type: 'pillar' };
-        this.scene.add(pillar);
-
-        // Water layer (initially hidden)
-        const waterGeo = new THREE.BoxGeometry(0.85, 0.01, 0.85);
-        const waterMat = new THREE.MeshStandardMaterial({
-          color: '#40a0ff',
-          roughness: 0.1,
-          metalness: 0.3,
-          transparent: true,
-          opacity: 0.65,
-        });
-        const water = new THREE.Mesh(waterGeo, waterMat);
-        water.position.set(c, pillarH, r);
-        water.visible = false;
-        this.scene.add(water);
-
-        // Visited overlay (initially hidden)
-        const topGeo = new THREE.BoxGeometry(0.86, 0.04, 0.86);
-        const topMat = new THREE.MeshStandardMaterial({
-          color: '#ffffff',
-          roughness: 0.6,
-          transparent: true,
-          opacity: 0.3,
-          depthWrite: false,
-        });
-        const top = new THREE.Mesh(topGeo, topMat);
-        top.position.set(c, pillarH + 0.01, r);
-        top.visible = false;
-        this.scene.add(top);
-
-        this.cellMeshes[r][c] = { pillar, water, top };
-      }
-    }
-
-    this.camera.lookAt((n - 1) / 2, 0, (m - 1) / 2);
-    this.controls.target.set((n - 1) / 2, 0, (m - 1) / 2);
-    this.controls.update();
-  }
-
-  _heightColor(h, maxH) {
-    if (maxH === 0) return '#4caf50';
-    const t = h / maxH;
-    // Map height to distinct, vivid colors:
-    // low (0) = blue → mid = green → yellow → orange → high (max) = red
-    const hue = 0.66 - t * 0.66; // 0.66(blue) → 0.33(green) → 0.16(yellow) → 0.08(orange) → 0(red)
-    const color = new THREE.Color();
-    color.setHSL(hue, 0.95, 0.55);
-    return color;
-  }
-
-  updateWater(r, c, waterHeight, totalScale) {
-    const mesh = this.cellMeshes[r]?.[c];
-    if (!mesh) return;
-    if (waterHeight > 0) {
-      mesh.water.visible = true;
-      const wH = Math.max(waterHeight * totalScale, 0.04);
-      mesh.water.scale.y = wH / 0.01;
-      mesh.water.position.y = mesh.pillar.position.y + mesh.pillar.geometry.parameters.height / 2 + wH / 2;
-      mesh.water.userData.baseY = mesh.water.position.y;
-    } else {
-      mesh.water.visible = false;
-    }
-  }
-
-  markVisited(r, c) {
-    const mesh = this.cellMeshes[r]?.[c];
-    if (!mesh) return;
-    mesh.top.visible = true;
-  }
-
-  highlightCell(r, c) {
-    this.clearHighlight();
-    const mesh = this.cellMeshes[r]?.[c];
-    if (!mesh) return;
-
-    const ringGeo = new THREE.TorusGeometry(0.5, 0.06, 16, 32);
-    const ringMat = new THREE.MeshBasicMaterial({ color: '#ffd740' });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.copy(mesh.pillar.position);
-    ring.position.y += mesh.pillar.geometry.parameters.height / 2 + 0.1;
-    ring.name = 'highlight-ring';
-    this.scene.add(ring);
-    this.currentHighlight = ring;
-
-    mesh.pillar.material.emissive = new THREE.Color('#332200');
-    mesh.pillar.material.emissiveIntensity = 0.6;
-  }
-
-  highlightNeighbors(neighbors) {
-    this.clearNeighborHighlights();
-    for (const { r, c } of neighbors) {
-      const mesh = this.cellMeshes[r]?.[c];
-      if (!mesh) continue;
-      const ringGeo = new THREE.TorusGeometry(0.42, 0.05, 8, 24);
-      const ringMat = new THREE.MeshBasicMaterial({ color: '#4fc3f7' });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.copy(mesh.pillar.position);
-      ring.position.y += mesh.pillar.geometry.parameters.height / 2 + 0.06;
-      ring.name = 'neighbor-ring';
-      this.scene.add(ring);
-      this.neighborHighlights.push(ring);
-    }
-  }
-
-  clearHighlight() {
-    if (this.currentHighlight) {
-      // Reset emissive on all pillars
-      for (const row of this.cellMeshes) {
-        for (const { pillar } of row) {
-          if (pillar.material.emissive) {
-            pillar.material.emissive = new THREE.Color(0);
-            pillar.material.emissiveIntensity = 0;
-          }
-        }
-      }
-      this.scene.remove(this.currentHighlight);
-      this.currentHighlight.geometry.dispose();
-      this.currentHighlight.material.dispose();
-      this.currentHighlight = null;
-    }
-  }
-
-  clearNeighborHighlights() {
-    for (const ring of this.neighborHighlights) {
-      this.scene.remove(ring);
-      ring.geometry.dispose();
-      ring.material.dispose();
-    }
-    this.neighborHighlights = [];
-  }
-
-  getIntersection(event) {
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-    const pillars = [];
-    for (const row of this.cellMeshes) {
-      for (const { pillar } of row) {
-        pillars.push(pillar);
-      }
-    }
-    const intersects = this.raycaster.intersectObjects(pillars);
-    if (intersects.length > 0) {
-      return intersects[0].object.userData;
-    }
-    return null;
-  }
-
-  _clearScene() {
-    this.clearHighlight();
-    this.clearNeighborHighlights();
-    this.cellMeshes = [];
-    const toRemove = [];
-    this.scene.traverse(child => {
-      if (child !== this.scene) toRemove.push(child);
-    });
-    for (const child of toRemove) {
-      this.scene.remove(child);
-      if (child.geometry) child.geometry.dispose();
-      if (child.material) {
-        if (Array.isArray(child.material)) {
-          child.material.forEach(m => m.dispose());
-        } else {
-          child.material.dispose();
-        }
-      }
-    }
-  }
-
-  _animate() {
-    requestAnimationFrame(this._animate);
-    this.controls.update();
-
-    // Subtle water bobbing animation
-    const time = performance.now() * 0.001;
-    for (const row of this.cellMeshes) {
-      for (const { water } of row) {
-        if (water.visible) {
-          const baseY = water.userData.baseY;
-          if (baseY !== undefined) {
-            water.position.y = baseY + Math.sin(time * 3 + water.position.x) * 0.015;
-          }
-        }
-      }
-    }
-
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  onResize() {
-    this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
-  }
-}
-
-// Expose to global scope so non-module scripts can access it
-window.Scene3D = Scene3D;
-
-// Boot the application after module script loads
 init();
 </script>
 </body>
