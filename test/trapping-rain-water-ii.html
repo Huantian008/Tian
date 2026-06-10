@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>接雨水 2.0 - Trapping Rain Water II</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel-bg: rgba(22, 22, 50, 0.85);
+    --text: #e0e0e0;
+    --accent: #4fc3f7;
+    --gold: #ffd740;
+    --danger: #ef5350;
+    --success: #66bb6a;
+    --slider-track: #333;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+  #canvas-container {
+    flex: 1;
+    position: relative;
+    cursor: grab;
+  }
+  #canvas-container:active { cursor: grabbing; }
+  #canvas-container canvas { display: block; }
+
+  /* Control bar */
+  #controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    flex-wrap: wrap;
+  }
+  #controls button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.2s;
+    min-width: 44px;
+    text-align: center;
+  }
+  #controls button:hover {
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.3);
+  }
+  #controls button:active { transform: scale(0.96); }
+  #controls button.primary {
+    background: var(--accent);
+    color: #1a1a2e;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  #controls button.warn {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+  }
+  #controls .separator {
+    width: 1px; height: 24px;
+    background: rgba(255,255,255,0.15);
+    margin: 0 4px;
+  }
+  #controls label {
+    font-size: 13px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #controls input[type="range"] {
+    width: 90px;
+    accent-color: var(--accent);
+  }
+  #controls select {
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* Stats bar */
+  #stats {
+    display: flex;
+    gap: 24px;
+    padding: 8px 24px;
+    background: rgba(0,0,0,0.3);
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  #stats .stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #stats .stat-value {
+    color: var(--accent);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+
+  /* Cell info tooltip */
+  #cell-info {
+    position: absolute;
+    top: 12px; right: 16px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.7;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #cell-info.visible { opacity: 1; }
+  #cell-info .coord { color: var(--gold); font-weight: 600; }
+
+  /* Loading overlay */
+  #loading {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    font-size: 18px; color: #aaa;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="loading">加载中...</div>
+    <div id="cell-info">
+      <div>📍 坐标: <span class="coord" id="ci-coord">-</span></div>
+      <div>📏 高度: <span class="stat-value" id="ci-height">-</span></div>
+      <div>💧 积水: <span class="stat-value" id="ci-water">-</span></div>
+      <div>✅ 已访问: <span id="ci-visited">-</span></div>
+    </div>
+  </div>
+
+  <div id="stats">
+    <div class="stat">💧 总积水: <span class="stat-value" id="st-water">0</span></div>
+    <div class="stat">📦 堆中: <span class="stat-value" id="st-heap">0</span></div>
+    <div class="stat">✅ 已访问: <span class="stat-value" id="st-visited">0</span></div>
+    <div class="stat">🌊 水位: <span class="stat-value" id="st-level">0</span></div>
+    <div class="stat">📋 步骤: <span class="stat-value" id="st-step">0</span></div>
+  </div>
+
+  <div id="controls">
+    <button id="btn-reset" title="重置">⏮</button>
+    <button id="btn-back" title="后退">◀◀</button>
+    <button id="btn-play" class="primary" title="播放/暂停">▶</button>
+    <button id="btn-forward" title="前进">⏭</button>
+    <button id="btn-finish" title="快进到结束">▶▶</button>
+
+    <div class="separator"></div>
+
+    <label>⚡ 速度:
+      <input type="range" id="speed-slider" min="1" max="10" value="5" step="1">
+    </label>
+
+    <div class="separator"></div>
+
+    <label>📐 网格:
+      <select id="grid-size">
+        <option value="4">4×4</option>
+        <option value="6">6×6</option>
+        <option value="8" selected>8×8</option>
+        <option value="10">10×10</option>
+        <option value="12">12×12</option>
+      </select>
+    </label>
+    <button id="btn-random" class="warn">🔄 随机生成</button>
+  </div>
+</body>
+</html>
