@@ -1,0 +1,1268 @@
+# Trapping Rain Water II 3D Visualization — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build a single-file HTML page with Three.js 3D visualization of the Trapping Rain Water II algorithm, with full playback controls.
+
+**Architecture:** Single HTML file with embedded CSS and JS. Three.js loaded via CDN import map. Four main JS classes: MinHeap (data structure), RainWaterEngine (algorithm logic + step history), Scene3D (Three.js rendering), UIController (DOM events + state sync). A main() function wires them together.
+
+**Tech Stack:** HTML5, CSS3, JavaScript ES modules, Three.js r160+ (CDN via import map), OrbitControls (CDN)
+
+---
+
+## File Structure
+
+- **Create:** `trapping-rain-water-ii.html` — the entire application
+
+---
+
+### Task 1: HTML Structure and CSS Layout
+
+**Files:**
+- Create: `trapping-rain-water-ii.html`
+
+- [ ] **Step 1: Write the HTML shell with CSS**
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>接雨水 2.0 - Trapping Rain Water II</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --panel-bg: rgba(22, 22, 50, 0.85);
+    --text: #e0e0e0;
+    --accent: #4fc3f7;
+    --gold: #ffd740;
+    --danger: #ef5350;
+    --success: #66bb6a;
+    --slider-track: #333;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+  #canvas-container {
+    flex: 1;
+    position: relative;
+    cursor: grab;
+  }
+  #canvas-container:active { cursor: grabbing; }
+  #canvas-container canvas { display: block; }
+
+  /* Control bar */
+  #controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    flex-wrap: wrap;
+  }
+  #controls button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.2s;
+    min-width: 44px;
+    text-align: center;
+  }
+  #controls button:hover {
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.3);
+  }
+  #controls button:active { transform: scale(0.96); }
+  #controls button.primary {
+    background: var(--accent);
+    color: #1a1a2e;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  #controls button.warn {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+  }
+  #controls .separator {
+    width: 1px; height: 24px;
+    background: rgba(255,255,255,0.15);
+    margin: 0 4px;
+  }
+  #controls label {
+    font-size: 13px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #controls input[type="range"] {
+    width: 90px;
+    accent-color: var(--accent);
+  }
+  #controls select {
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* Stats bar */
+  #stats {
+    display: flex;
+    gap: 24px;
+    padding: 8px 24px;
+    background: rgba(0,0,0,0.3);
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  #stats .stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #stats .stat-value {
+    color: var(--accent);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+
+  /* Cell info tooltip */
+  #cell-info {
+    position: absolute;
+    top: 12px; right: 16px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.7;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #cell-info.visible { opacity: 1; }
+  #cell-info .coord { color: var(--gold); font-weight: 600; }
+
+  /* Loading overlay */
+  #loading {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    font-size: 18px; color: #aaa;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="loading">加载中...</div>
+    <div id="cell-info">
+      <div>📍 坐标: <span class="coord" id="ci-coord">-</span></div>
+      <div>📏 高度: <span class="stat-value" id="ci-height">-</span></div>
+      <div>💧 积水: <span class="stat-value" id="ci-water">-</span></div>
+      <div>✅ 已访问: <span id="ci-visited">-</span></div>
+    </div>
+  </div>
+
+  <div id="stats">
+    <div class="stat">💧 总积水: <span class="stat-value" id="st-water">0</span></div>
+    <div class="stat">📦 堆中: <span class="stat-value" id="st-heap">0</span></div>
+    <div class="stat">✅ 已访问: <span class="stat-value" id="st-visited">0</span></div>
+    <div class="stat">🌊 水位: <span class="stat-value" id="st-level">0</span></div>
+    <div class="stat">📋 步骤: <span class="stat-value" id="st-step">0</span></div>
+  </div>
+
+  <div id="controls">
+    <button id="btn-reset" title="重置">⏮</button>
+    <button id="btn-back" title="后退">◀◀</button>
+    <button id="btn-play" class="primary" title="播放/暂停">▶</button>
+    <button id="btn-forward" title="前进">⏭</button>
+    <button id="btn-finish" title="快进到结束">▶▶</button>
+
+    <div class="separator"></div>
+
+    <label>⚡ 速度:
+      <input type="range" id="speed-slider" min="1" max="10" value="5" step="1">
+    </label>
+
+    <div class="separator"></div>
+
+    <label>📐 网格:
+      <select id="grid-size">
+        <option value="4">4×4</option>
+        <option value="6">6×6</option>
+        <option value="8" selected>8×8</option>
+        <option value="10">10×10</option>
+        <option value="12">12×12</option>
+      </select>
+    </label>
+    <button id="btn-random" class="warn">🔄 随机生成</button>
+  </div>
+</body>
+</html>
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add trapping-rain-water-ii.html
+git commit -m "feat: add HTML shell and CSS for trapping rain water II visualization"
+```
+
+---
+
+### Task 2: MinHeap Data Structure
+
+**Files:**
+- Modify: `trapping-rain-water-ii.html` — add `<script>` section with MinHeap class
+
+- [ ] **Step 1: Add MinHeap class**
+
+Insert in the `<script type="importmap">` and `<script type="module">` block (created in next steps). For now, add this code to a `<script>` block before the closing `</body>`:
+
+```javascript
+class MinHeap {
+  constructor() {
+    this.heap = [];
+  }
+
+  size() { return this.heap.length; }
+
+  push(item) {
+    this.heap.push(item);
+    this._bubbleUp(this.heap.length - 1);
+  }
+
+  pop() {
+    if (this.heap.length === 1) return this.heap.pop();
+    const top = this.heap[0];
+    this.heap[0] = this.heap.pop();
+    this._sinkDown(0);
+    return top;
+  }
+
+  peek() {
+    return this.heap[0] || null;
+  }
+
+  _bubbleUp(i) {
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (this.heap[i].h >= this.heap[parent].h) break;
+      [this.heap[i], this.heap[parent]] = [this.heap[parent], this.heap[i]];
+      i = parent;
+    }
+  }
+
+  _sinkDown(i) {
+    const n = this.heap.length;
+    while (true) {
+      let smallest = i;
+      const l = (i << 1) + 1;
+      const r = (i << 1) + 2;
+      if (l < n && this.heap[l].h < this.heap[smallest].h) smallest = l;
+      if (r < n && this.heap[r].h < this.heap[smallest].h) smallest = r;
+      if (smallest === i) break;
+      [this.heap[i], this.heap[smallest]] = [this.heap[smallest], this.heap[i]];
+      i = smallest;
+    }
+  }
+
+  snapshot() {
+    return this.heap.map(item => ({ ...item }));
+  }
+}
+```
+
+Each heap item has shape `{ r: number, c: number, h: number }`.
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add trapping-rain-water-ii.html
+git commit -m "feat: add MinHeap class"
+```
+
+---
+
+### Task 3: RainWaterEngine — Algorithm Logic
+
+**Files:**
+- Modify: `trapping-rain-water-ii.html` — add RainWaterEngine class
+
+- [ ] **Step 1: Add RainWaterEngine class**
+
+```javascript
+class RainWaterEngine {
+  constructor(heightMap) {
+    this.heightMap = heightMap;
+    this.m = heightMap.length;
+    this.n = heightMap[0].length;
+    this.reset();
+  }
+
+  reset() {
+    this.visited = Array.from({ length: this.m }, () => new Array(this.n).fill(false));
+    this.waterMap = Array.from({ length: this.m }, () => new Array(this.n).fill(0));
+    this.heap = new MinHeap();
+    this.waterLevel = 0;
+    this.totalWater = 0;
+    this.stepHistory = [];
+    this.isComplete = false;
+    this._initBoundary();
+  }
+
+  _initBoundary() {
+    for (let j = 0; j < this.n; j++) {
+      this._pushIfNotVisited(0, j);
+      this._pushIfNotVisited(this.m - 1, j);
+    }
+    for (let i = 1; i < this.m - 1; i++) {
+      this._pushIfNotVisited(i, 0);
+      this._pushIfNotVisited(i, this.n - 1);
+    }
+  }
+
+  _pushIfNotVisited(r, c) {
+    if (this.visited[r][c]) return;
+    this.visited[r][c] = true;
+    this.heap.push({ r, c, h: this.heightMap[r][c] });
+  }
+
+  canAdvance() {
+    return !this.isComplete && this.heap.size() > 0;
+  }
+
+  /**
+   * Execute one step. Returns a Step object describing what happened,
+   * or null if the algorithm is done.
+   */
+  step() {
+    if (this.isComplete) return null;
+    if (this.heap.size() === 0) {
+      this.isComplete = true;
+      return { type: 'complete', totalWater: this.totalWater };
+    }
+
+    const current = this.heap.pop();
+    this.waterLevel = Math.max(this.waterLevel, current.h);
+
+    const step = {
+      type: 'process',
+      cell: { r: current.r, c: current.c },
+      height: current.h,
+      waterLevel: this.waterLevel,
+      neighbors: [],
+      totalWater: this.totalWater,
+      heapSize: this.heap.size(),
+      visitedCount: this._countVisited(),
+    };
+
+    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    for (const [dr, dc] of dirs) {
+      const nr = current.r + dr;
+      const nc = current.c + dc;
+      if (nr < 0 || nr >= this.m || nc < 0 || nc >= this.n) continue;
+      if (this.visited[nr][nc]) continue;
+
+      this.visited[nr][nc] = true;
+      const nh = this.heightMap[nr][nc];
+      const water = Math.max(0, this.waterLevel - nh);
+      if (water > 0) {
+        this.waterMap[nr][nc] = water;
+        this.totalWater += water;
+      }
+      this.heap.push({ r: nr, c: nc, h: nh });
+
+      step.neighbors.push({
+        r: nr, c: nc,
+        height: nh,
+        water: water,
+      });
+    }
+
+    this.stepHistory.push(step);
+    return step;
+  }
+
+  /**
+   * Undo the last step. Returns true if a step was undone.
+   */
+  undo() {
+    if (this.stepHistory.length === 0) return false;
+    const step = this.stepHistory.pop();
+    this.isComplete = false;
+
+    // Restore the popped cell to the heap
+    this.heap.push({ r: step.cell.r, c: step.cell.c, h: step.height });
+    this.waterLevel = this.stepHistory.length > 0
+      ? this.stepHistory[this.stepHistory.length - 1].waterLevel
+      : 0;
+
+    // Undo neighbor processing
+    for (const nb of step.neighbors) {
+      this.visited[nb.r][nb.c] = false;
+      if (nb.water > 0) {
+        this.waterMap[nb.r][nb.c] = 0;
+        this.totalWater -= nb.water;
+      }
+    }
+
+    return true;
+  }
+
+  _countVisited() {
+    let count = 0;
+    for (let i = 0; i < this.m; i++) {
+      for (let j = 0; j < this.n; j++) {
+        if (this.visited[i][j]) count++;
+      }
+    }
+    return count;
+  }
+}
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add trapping-rain-water-ii.html
+git commit -m "feat: add RainWaterEngine with step/undo history"
+```
+
+---
+
+### Task 4: Scene3D — Three.js Rendering
+
+**Files:**
+- Modify: `trapping-rain-water-ii.html` — add Three.js import map and Scene3D class
+
+- [ ] **Step 1: Add the Three.js import map**
+
+Insert inside `<head>`:
+
+```html
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+```
+
+- [ ] **Step 2: Add Scene3D class in the module script**
+
+Replace the existing `<script>` block (or add a new `<script type="module">` before `</body>`) with:
+
+```javascript
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+class Scene3D {
+  constructor(container) {
+    this.container = container;
+    this.cellMeshes = [];     // 2D array: cellMeshes[r][c] = { pillar, water, top }
+    this.groundLine = null;
+    this.currentHighlight = null;
+    this.neighborHighlights = [];
+
+    this._initScene();
+    this._initLights();
+    this._initCamera();
+    this._initControls();
+    this._initRaycaster();
+    this._animate = this._animate.bind(this);
+    requestAnimationFrame(this._animate);
+  }
+
+  _initScene() {
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color('#1a1a2e');
+    this.scene.fog = new THREE.Fog('#1a1a2e', 15, 60);
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.container.appendChild(this.renderer.domElement);
+  }
+
+  _initLights() {
+    const ambient = new THREE.AmbientLight('#bcd4f5', 1.8);
+    this.scene.add(ambient);
+
+    const sun = new THREE.DirectionalLight('#ffffff', 4.5);
+    sun.position.set(10, 20, 8);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 80;
+    sun.shadow.camera.left = -20;
+    sun.shadow.camera.right = 20;
+    sun.shadow.camera.top = 20;
+    sun.shadow.camera.bottom = -20;
+    sun.shadow.bias = -0.0001;
+    this.scene.add(sun);
+
+    const fill = new THREE.DirectionalLight('#8899cc', 1.2);
+    fill.position.set(-5, 3, -5);
+    this.scene.add(fill);
+  }
+
+  _initCamera() {
+    this.camera = new THREE.PerspectiveCamera(
+      50,
+      this.container.clientWidth / this.container.clientHeight,
+      0.5,
+      100
+    );
+    this.camera.position.set(12, 14, 12);
+    this.camera.lookAt(4, 0, 4);
+  }
+
+  _initControls() {
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.08;
+    this.controls.target.set(3.5, 0, 3.5);
+    this.controls.minDistance = 4;
+    this.controls.maxDistance = 30;
+    this.controls.maxPolarAngle = Math.PI / 2.15;
+    this.controls.update();
+  }
+
+  _initRaycaster() {
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+  }
+
+  /**
+   * Build the scene from a height map.
+   * @param {number[][]} heightMap - m×n matrix of heights (non-negative integers)
+   */
+  buildHeightMap(heightMap) {
+    // Clear existing
+    this._clearScene();
+    const m = heightMap.length;
+    const n = heightMap[0].length;
+    const maxH = Math.max(...heightMap.flat(), 1);
+
+    // Ground
+    const groundGeo = new THREE.PlaneGeometry(n + 2, m + 2);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: '#2a2a3a',
+      roughness: 0.7,
+      metalness: 0.1,
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.set((n - 1) / 2, -0.05, (m - 1) / 2);
+    ground.receiveShadow = true;
+    this.scene.add(ground);
+
+    // Grid lines on ground
+    const gridHelper = new THREE.PolarGridHelper(
+      Math.max(m, n) * 0.9, 64, Math.max(m, n),
+      64, '#444466', '#333350'
+    );
+    gridHelper.position.set((n - 1) / 2, 0, (m - 1) / 2);
+    this.scene.add(gridHelper);
+
+    // Build pillars
+    this.cellMeshes = [];
+    const scale = 0.38; // height scale factor
+
+    for (let r = 0; r < m; r++) {
+      this.cellMeshes[r] = [];
+      for (let c = 0; c < n; c++) {
+        const h = heightMap[r][c];
+        const pillarH = Math.max(h * scale, 0.1);
+        const color = this._heightColor(h, maxH);
+
+        // Pillar
+        const geo = new THREE.BoxGeometry(0.9, pillarH, 0.9);
+        const mat = new THREE.MeshStandardMaterial({
+          color,
+          roughness: 0.35,
+          metalness: 0.15,
+        });
+        const pillar = new THREE.Mesh(geo, mat);
+        pillar.position.set(c, pillarH / 2, r);
+        pillar.castShadow = true;
+        pillar.receiveShadow = true;
+        pillar.userData = { r, c, height: h, type: 'pillar' };
+        this.scene.add(pillar);
+
+        // Water layer (initially hidden)
+        const waterGeo = new THREE.BoxGeometry(0.85, 0.01, 0.85);
+        const waterMat = new THREE.MeshStandardMaterial({
+          color: '#40a0ff',
+          roughness: 0.1,
+          metalness: 0.3,
+          transparent: true,
+          opacity: 0.65,
+        });
+        const water = new THREE.Mesh(waterGeo, waterMat);
+        water.position.set(c, pillarH, r);
+        water.visible = false;
+        this.scene.add(water);
+
+        // Visited overlay (initially hidden)
+        const topGeo = new THREE.BoxGeometry(0.86, 0.04, 0.86);
+        const topMat = new THREE.MeshStandardMaterial({
+          color: '#ffffff',
+          roughness: 0.6,
+          transparent: true,
+          opacity: 0.3,
+          depthWrite: false,
+        });
+        const top = new THREE.Mesh(topGeo, topMat);
+        top.position.set(c, pillarH + 0.01, r);
+        top.visible = false;
+        this.scene.add(top);
+
+        this.cellMeshes[r][c] = { pillar, water, top };
+      }
+    }
+
+    this.camera.lookAt((n - 1) / 2, 0, (m - 1) / 2);
+    this.controls.target.set((n - 1) / 2, 0, (m - 1) / 2);
+    this.controls.update();
+  }
+
+  /**
+   * Map height to HSL color: low=green, mid=yellow, high=red
+   */
+  _heightColor(h, maxH) {
+    if (maxH === 0) return '#66bb6a';
+    const t = h / maxH;
+    const hue = (1 - t) * 0.33; // 0.33 = green, 0 = red
+    const color = new THREE.Color();
+    color.setHSL(hue, 0.65, 0.55);
+    return color;
+  }
+
+  updateWater(r, c, waterHeight, totalScale) {
+    const mesh = this.cellMeshes[r]?.[c];
+    if (!mesh) return;
+    if (waterHeight > 0) {
+      mesh.water.visible = true;
+      const wH = Math.max(waterHeight * totalScale, 0.04);
+      mesh.water.scale.y = wH / 0.01;
+      mesh.water.position.y = mesh.pillar.position.y + mesh.pillar.geometry.parameters.height / 2 + wH / 2;
+    } else {
+      mesh.water.visible = false;
+    }
+  }
+
+  markVisited(r, c) {
+    const mesh = this.cellMeshes[r]?.[c];
+    if (!mesh) return;
+    mesh.top.visible = true;
+  }
+
+  highlightCell(r, c) {
+    this.clearHighlight();
+    const mesh = this.cellMeshes[r]?.[c];
+    if (!mesh) return;
+
+    // Ring around the cell
+    const ringGeo = new THREE.TorusGeometry(0.5, 0.06, 16, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color: '#ffd740' });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.copy(mesh.pillar.position);
+    ring.position.y += mesh.pillar.geometry.parameters.height / 2 + 0.1;
+    ring.name = 'highlight-ring';
+    this.scene.add(ring);
+    this.currentHighlight = ring;
+
+    // Emissive glow on pillar
+    mesh.pillar.material.emissive = new THREE.Color('#332200');
+    mesh.pillar.material.emissiveIntensity = 0.6;
+  }
+
+  highlightNeighbors(neighbors) {
+    this.clearNeighborHighlights();
+    for (const { r, c } of neighbors) {
+      const mesh = this.cellMeshes[r]?.[c];
+      if (!mesh) continue;
+      const ringGeo = new THREE.TorusGeometry(0.42, 0.05, 8, 24);
+      const ringMat = new THREE.MeshBasicMaterial({ color: '#4fc3f7' });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.copy(mesh.pillar.position);
+      ring.position.y += mesh.pillar.geometry.parameters.height / 2 + 0.06;
+      ring.name = 'neighbor-ring';
+      this.scene.add(ring);
+      this.neighborHighlights.push(ring);
+    }
+  }
+
+  clearHighlight() {
+    if (this.currentHighlight) {
+      // Remove emissive
+      const ringPos = this.currentHighlight.position;
+      // Find the pillar under this ring and reset emissive
+      for (const row of this.cellMeshes) {
+        for (const { pillar } of row) {
+          if (pillar.material.emissive) {
+            pillar.material.emissive = new THREE.Color(0);
+            pillar.material.emissiveIntensity = 0;
+          }
+        }
+      }
+      this.scene.remove(this.currentHighlight);
+      this.currentHighlight.geometry.dispose();
+      this.currentHighlight.material.dispose();
+      this.currentHighlight = null;
+    }
+  }
+
+  clearNeighborHighlights() {
+    for (const ring of this.neighborHighlights) {
+      this.scene.remove(ring);
+      ring.geometry.dispose();
+      ring.material.dispose();
+    }
+    this.neighborHighlights = [];
+  }
+
+  getIntersection(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const pillars = [];
+    for (const row of this.cellMeshes) {
+      for (const { pillar } of row) {
+        pillars.push(pillar);
+      }
+    }
+    const intersects = this.raycaster.intersectObjects(pillars);
+    if (intersects.length > 0) {
+      return intersects[0].object.userData;
+    }
+    return null;
+  }
+
+  _clearScene() {
+    this.clearHighlight();
+    this.clearNeighborHighlights();
+    this.cellMeshes = [];
+    const toRemove = [];
+    this.scene.traverse(child => {
+      if (child !== this.scene) toRemove.push(child);
+    });
+    for (const child of toRemove) {
+      this.scene.remove(child);
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => m.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+    }
+  }
+
+  _animate() {
+    requestAnimationFrame(this._animate);
+    this.controls.update();
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  onResize() {
+    this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+  }
+}
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add trapping-rain-water-ii.html
+git commit -m "feat: add Scene3D class for Three.js rendering"
+```
+
+---
+
+### Task 5: UIController — Interaction and State Sync
+
+**Files:**
+- Modify: `trapping-rain-water-ii.html` — add UIController class
+
+- [ ] **Step 1: Add UIController class**
+
+```javascript
+class UIController {
+  constructor(engine, scene, onGenerate) {
+    this.engine = engine;
+    this.scene = scene;
+    this.onGenerate = onGenerate; // callback(size) => new heightMap
+    this.isPlaying = false;
+    this.playTimer = null;
+    this.speed = 200; // ms per step
+
+    this._bindElements();
+    this._bindEvents();
+    this._updateStats();
+    this._updateButtons();
+  }
+
+  _bindElements() {
+    this.els = {
+      btnReset: document.getElementById('btn-reset'),
+      btnBack: document.getElementById('btn-back'),
+      btnPlay: document.getElementById('btn-play'),
+      btnForward: document.getElementById('btn-forward'),
+      btnFinish: document.getElementById('btn-finish'),
+      btnRandom: document.getElementById('btn-random'),
+      speedSlider: document.getElementById('speed-slider'),
+      gridSize: document.getElementById('grid-size'),
+      stWater: document.getElementById('st-water'),
+      stHeap: document.getElementById('st-heap'),
+      stVisited: document.getElementById('st-visited'),
+      stLevel: document.getElementById('st-level'),
+      stStep: document.getElementById('st-step'),
+      cellInfo: document.getElementById('cell-info'),
+      ciCoord: document.getElementById('ci-coord'),
+      ciHeight: document.getElementById('ci-height'),
+      ciWater: document.getElementById('ci-water'),
+      ciVisited: document.getElementById('ci-visited'),
+      loading: document.getElementById('loading'),
+    };
+  }
+
+  _bindEvents() {
+    this.els.btnReset.addEventListener('click', () => this._reset());
+    this.els.btnBack.addEventListener('click', () => this._back());
+    this.els.btnPlay.addEventListener('click', () => this._togglePlay());
+    this.els.btnForward.addEventListener('click', () => this._forward());
+    this.els.btnFinish.addEventListener('click', () => this._finish());
+    this.els.btnRandom.addEventListener('click', () => this._randomGenerate());
+    this.els.gridSize.addEventListener('change', () => this._randomGenerate());
+    this.els.speedSlider.addEventListener('input', () => {
+      this.speed = 1000 - (this.els.speedSlider.value - 1) * 100;
+    });
+    this.speed = 1000 - (this.els.speedSlider.value - 1) * 100;
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case ' ': e.preventDefault(); this._togglePlay(); break;
+        case 'ArrowRight': this._forward(); break;
+        case 'ArrowLeft': this._back(); break;
+        case 'r': case 'R': this._reset(); break;
+        case 'f': case 'F': this._finish(); break;
+      }
+    });
+
+    // Click on 3D cells
+    this.scene.renderer.domElement.addEventListener('click', (e) => {
+      const data = this.scene.getIntersection(e);
+      if (data && data.type === 'pillar') {
+        this._showCellInfo(data.r, data.c);
+      }
+    });
+
+    // Resize
+    window.addEventListener('resize', () => this.scene.onResize());
+  }
+
+  _reset() {
+    this._stopPlay();
+    this.engine.reset();
+    this._syncSceneFull();
+    this.scene.clearHighlight();
+    this.scene.clearNeighborHighlights();
+    this._updateStats();
+    this._updateButtons();
+  }
+
+  _back() {
+    this._stopPlay();
+    if (this.engine.undo()) {
+      this._syncSceneFull();
+      this._updateStats();
+      this._updateButtons();
+    }
+  }
+
+  _forward() {
+    if (!this.engine.canAdvance()) return;
+    const step = this.engine.step();
+    if (!step) return;
+    this._applyStepVisual(step);
+    this._updateStats();
+    this._updateButtons();
+  }
+
+  _togglePlay() {
+    if (this.isPlaying) {
+      this._stopPlay();
+    } else {
+      this._startPlay();
+    }
+  }
+
+  _startPlay() {
+    if (!this.engine.canAdvance()) return;
+    this.isPlaying = true;
+    this.els.btnPlay.textContent = '⏸';
+    this._playLoop();
+  }
+
+  _stopPlay() {
+    this.isPlaying = false;
+    if (this.playTimer) clearTimeout(this.playTimer);
+    this.playTimer = null;
+    this.els.btnPlay.textContent = '▶';
+  }
+
+  _playLoop() {
+    if (!this.isPlaying) return;
+    if (!this.engine.canAdvance()) {
+      this._stopPlay();
+      this._updateButtons();
+      return;
+    }
+    const step = this.engine.step();
+    if (step && step.type === 'complete') {
+      this._stopPlay();
+      this._updateStats();
+      this._updateButtons();
+      return;
+    }
+    if (step) {
+      this._applyStepVisual(step);
+      this._updateStats();
+    }
+    this.playTimer = setTimeout(() => this._playLoop(), this.speed);
+  }
+
+  _finish() {
+    this._stopPlay();
+    while (this.engine.canAdvance()) {
+      this.engine.step();
+    }
+    this._syncSceneFull();
+    this._updateStats();
+    this._updateButtons();
+  }
+
+  _applyStepVisual(step) {
+    if (step.type === 'complete') return;
+
+    // Highlight current cell
+    this.scene.highlightCell(step.cell.r, step.cell.c);
+
+    // Highlight neighbors
+    this.scene.highlightNeighbors(step.neighbors);
+
+    // Update water layers for neighbors with water
+    for (const nb of step.neighbors) {
+      if (nb.water > 0) {
+        this.scene.updateWater(nb.r, nb.c, nb.water, 0.38);
+      }
+      this.scene.markVisited(nb.r, nb.c);
+    }
+  }
+
+  _syncSceneFull() {
+    // Rebuild water and visited states from engine
+    const scale = 0.38;
+    for (let r = 0; r < this.engine.m; r++) {
+      for (let c = 0; c < this.engine.n; c++) {
+        if (this.engine.waterMap[r][c] > 0) {
+          this.scene.updateWater(r, c, this.engine.waterMap[r][c], scale);
+        } else {
+          const mesh = this.scene.cellMeshes[r]?.[c];
+          if (mesh) mesh.water.visible = false;
+        }
+        if (this.engine.visited[r][c]) {
+          this.scene.markVisited(r, c);
+        }
+      }
+    }
+  }
+
+  _randomGenerate() {
+    this._stopPlay();
+    const size = parseInt(this.els.gridSize.value);
+    this.onGenerate(size);
+    this._updateStats();
+    this._updateButtons();
+  }
+
+  _updateStats() {
+    this.els.stWater.textContent = this.engine.totalWater;
+    this.els.stHeap.textContent = this.engine.heap.size();
+    this.els.stVisited.textContent = this.engine._countVisited();
+    this.els.stLevel.textContent = this.engine.waterLevel;
+    this.els.stStep.textContent = this.engine.stepHistory.length;
+  }
+
+  _updateButtons() {
+    this.els.btnForward.disabled = !this.engine.canAdvance();
+    this.els.btnFinish.disabled = !this.engine.canAdvance();
+    this.els.btnBack.disabled = this.engine.stepHistory.length === 0;
+  }
+
+  _showCellInfo(r, c) {
+    const info = this.els;
+    info.ciCoord.textContent = `(${r}, ${c})`;
+    info.ciHeight.textContent = this.engine.heightMap[r][c];
+    info.ciWater.textContent = this.engine.waterMap[r][c];
+    info.ciVisited.textContent = this.engine.visited[r][c] ? '✅ 是' : '❌ 否';
+    info.cellInfo.classList.add('visible');
+    clearTimeout(this._cellInfoTimer);
+    this._cellInfoTimer = setTimeout(() => {
+      info.cellInfo.classList.remove('visible');
+    }, 3000);
+  }
+
+  hideLoading() {
+    this.els.loading.style.display = 'none';
+  }
+}
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add trapping-rain-water-ii.html
+git commit -m "feat: add UIController for interaction and state sync"
+```
+
+---
+
+### Task 6: Main — Wiring Everything Together
+
+**Files:**
+- Modify: `trapping-rain-water-ii.html` — add main() function that connects all components
+
+- [ ] **Step 1: Add the main() function and initialization**
+
+```javascript
+function generateRandomHeightMap(size) {
+  const map = [];
+  for (let i = 0; i < size; i++) {
+    map[i] = [];
+    for (let j = 0; j < size; j++) {
+      // Generate heights 0–9 with some structure
+      // Outer ring tends to be higher (mountains)
+      const distFromEdge = Math.min(i, j, size - 1 - i, size - 1 - j);
+      const baseHeight = 1 + Math.floor(Math.random() * 8);
+      // Edge bias: outer cells tend higher
+      const edgeBias = distFromEdge === 0 ? Math.floor(Math.random() * 4) + 2 : 0;
+      map[i][j] = Math.min(9, Math.max(0, baseHeight + edgeBias - distFromEdge));
+    }
+  }
+  return map;
+}
+
+// Global state
+let engine;
+let scene3d;
+let ui;
+
+function init() {
+  const container = document.getElementById('canvas-container');
+  scene3d = new Scene3D(container);
+
+  const size = 8;
+  const heightMap = generateRandomHeightMap(size);
+  engine = new RainWaterEngine(heightMap);
+  scene3d.buildHeightMap(heightMap);
+
+  ui = new UIController(engine, scene3d, (newSize) => {
+    const newMap = generateRandomHeightMap(newSize);
+    engine = new RainWaterEngine(newMap);
+    scene3d.buildHeightMap(newMap);
+    ui.engine = engine;
+    ui._updateStats();
+    ui._updateButtons();
+  });
+
+  ui.hideLoading();
+}
+
+init();
+```
+
+- [ ] **Step 2: Ensure the full file is correctly structured**
+
+The final file structure should be:
+
+```
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>...</title>
+  <style>...</style>
+  <script type="importmap">...</script>
+</head>
+<body>
+  <div id="canvas-container">...</div>
+  <div id="stats">...</div>
+  <div id="controls">...</div>
+  <script type="module">
+    // All JS classes and init()
+    class MinHeap { ... }
+    class RainWaterEngine { ... }
+    class Scene3D { ... }
+    class UIController { ... }
+    function generateRandomHeightMap(size) { ... }
+    function init() { ... }
+    init();
+  </script>
+</body>
+</html>
+```
+
+- [ ] **Step 3: Verify the file opens correctly by checking syntax**
+
+```bash
+# No build step needed — just verify with a quick syntax check via Node
+node -e "process.exit(0)"
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add trapping-rain-water-ii.html
+git commit -m "feat: wire up main() and complete the application"
+```
+
+---
+
+### Task 7: Polish and Verification
+
+**Files:**
+- Modify: `trapping-rain-water-ii.html` — edge case fixes and improvements
+
+- [ ] **Step 1: Fix edge cases in the engine**
+
+Add guard for grids ≤ 2×2 in `RainWaterEngine._initBoundary()`:
+
+```javascript
+_initBoundary() {
+  // For 2x2 or smaller grids, all cells are boundaries, no water can be trapped
+  for (let j = 0; j < this.n; j++) {
+    this._pushIfNotVisited(0, j);
+    this._pushIfNotVisited(this.m - 1, j);
+  }
+  for (let i = 1; i < this.m - 1; i++) {
+    this._pushIfNotVisited(i, 0);
+    this._pushIfNotVisited(i, this.n - 1);
+  }
+  // If the grid has no interior cells, the algorithm is already complete
+  if (this.m <= 2 || this.n <= 2) {
+    this.isComplete = this.heap.size() === 0;
+  }
+}
+```
+
+- [ ] **Step 2: Add boundary highlight effect on init**
+
+In `Scene3D`, add a method to pulse boundary cells when the scene is first built:
+
+```javascript
+pulseBoundaries(engine) {
+  // Flash the boundary cells that are in the heap
+  for (let r = 0; r < engine.m; r++) {
+    for (let c = 0; c < engine.n; c++) {
+      if (engine.visited[r][c]) {
+        const mesh = this.cellMeshes[r]?.[c];
+        if (mesh) {
+          mesh.top.visible = true;
+          // Briefly change top color to indicate boundary
+        }
+      }
+    }
+  }
+}
+```
+
+Call it after `buildHeightMap` in `init()`:
+
+```javascript
+scene3d.buildHeightMap(heightMap);
+scene3d.pulseBoundaries(engine);
+```
+
+- [ ] **Step 3: Add a subtle water animation**
+
+In `Scene3D._animate()`, add bobbing animation for water layers:
+
+```javascript
+_animate() {
+  requestAnimationFrame(this._animate);
+  this.controls.update();
+
+  // Subtle water animation
+  const time = performance.now() * 0.001;
+  for (const row of this.cellMeshes) {
+    for (const { water } of row) {
+      if (water.visible) {
+        water.position.y += Math.sin(time * 3 + water.position.x) * 0.003;
+      }
+    }
+  }
+
+  this.renderer.render(this.scene, this.camera);
+}
+```
+
+- [ ] **Step 4: Manual verification checklist**
+
+Open `trapping-rain-water-ii.html` in Chrome/Edge and verify:
+1. Scene loads with 8×8 grid — ✅ no errors in console
+2. Click "随机生成" — ✅ new height map renders
+3. Change grid size to 6×6, click random — ✅ scene rebuilds
+4. Click ▶ Play — ✅ algorithm runs step-by-step, cells highlight
+5. Click ⏸ Pause mid-playback — ✅ pauses
+6. Click ⏭ Forward — ✅ single step advances
+7. Click ◀◀ Back — ✅ step is undone
+8. Click ⏮ Reset — ✅ returns to initial state
+9. Click ▶▶ Finish — ✅ shows final result instantly
+10. Drag to rotate, scroll to zoom — ✅ orbit controls work
+11. Click a pillar — ✅ cell info popup appears
+12. Press Space — ✅ toggles play/pause
+13. Press ArrowRight/ArrowLeft — ✅ step forward/back
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add trapping-rain-water-ii.html
+git commit -m "feat: polish — boundary pulse, water animation, edge case fixes"
+```
