@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>接雨水 2.0 - Trapping Rain Water II</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 <style>
   :root {
     --bg: #1a1a2e;
@@ -390,6 +398,323 @@ class RainWaterEngine {
     return count;
   }
 }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+class Scene3D {
+  constructor(container) {
+    this.container = container;
+    this.cellMeshes = [];
+    this.groundLine = null;
+    this.currentHighlight = null;
+    this.neighborHighlights = [];
+
+    this._initScene();
+    this._initLights();
+    this._initCamera();
+    this._initControls();
+    this._initRaycaster();
+    this._animate = this._animate.bind(this);
+    requestAnimationFrame(this._animate);
+  }
+
+  _initScene() {
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color('#1a1a2e');
+    this.scene.fog = new THREE.Fog('#1a1a2e', 15, 60);
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.container.appendChild(this.renderer.domElement);
+  }
+
+  _initLights() {
+    const ambient = new THREE.AmbientLight('#bcd4f5', 1.8);
+    this.scene.add(ambient);
+
+    const sun = new THREE.DirectionalLight('#ffffff', 4.5);
+    sun.position.set(10, 20, 8);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 80;
+    sun.shadow.camera.left = -20;
+    sun.shadow.camera.right = 20;
+    sun.shadow.camera.top = 20;
+    sun.shadow.camera.bottom = -20;
+    sun.shadow.bias = -0.0001;
+    this.scene.add(sun);
+
+    const fill = new THREE.DirectionalLight('#8899cc', 1.2);
+    fill.position.set(-5, 3, -5);
+    this.scene.add(fill);
+  }
+
+  _initCamera() {
+    this.camera = new THREE.PerspectiveCamera(
+      50,
+      this.container.clientWidth / this.container.clientHeight,
+      0.5,
+      100
+    );
+    this.camera.position.set(12, 14, 12);
+    this.camera.lookAt(4, 0, 4);
+  }
+
+  _initControls() {
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.08;
+    this.controls.target.set(3.5, 0, 3.5);
+    this.controls.minDistance = 4;
+    this.controls.maxDistance = 30;
+    this.controls.maxPolarAngle = Math.PI / 2.15;
+    this.controls.update();
+  }
+
+  _initRaycaster() {
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+  }
+
+  buildHeightMap(heightMap) {
+    this._clearScene();
+    const m = heightMap.length;
+    const n = heightMap[0].length;
+    const maxH = Math.max(...heightMap.flat(), 1);
+
+    // Ground
+    const groundGeo = new THREE.PlaneGeometry(n + 2, m + 2);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: '#2a2a3a',
+      roughness: 0.7,
+      metalness: 0.1,
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.set((n - 1) / 2, -0.05, (m - 1) / 2);
+    ground.receiveShadow = true;
+    this.scene.add(ground);
+
+    // Grid lines
+    const gridHelper = new THREE.PolarGridHelper(
+      Math.max(m, n) * 0.9, 64, Math.max(m, n),
+      64, '#444466', '#333350'
+    );
+    gridHelper.position.set((n - 1) / 2, 0, (m - 1) / 2);
+    this.scene.add(gridHelper);
+
+    // Build pillars
+    this.cellMeshes = [];
+    const scale = 0.38;
+
+    for (let r = 0; r < m; r++) {
+      this.cellMeshes[r] = [];
+      for (let c = 0; c < n; c++) {
+        const h = heightMap[r][c];
+        const pillarH = Math.max(h * scale, 0.1);
+        const color = this._heightColor(h, maxH);
+
+        const geo = new THREE.BoxGeometry(0.9, pillarH, 0.9);
+        const mat = new THREE.MeshStandardMaterial({
+          color,
+          roughness: 0.35,
+          metalness: 0.15,
+        });
+        const pillar = new THREE.Mesh(geo, mat);
+        pillar.position.set(c, pillarH / 2, r);
+        pillar.castShadow = true;
+        pillar.receiveShadow = true;
+        pillar.userData = { r, c, height: h, type: 'pillar' };
+        this.scene.add(pillar);
+
+        // Water layer (initially hidden)
+        const waterGeo = new THREE.BoxGeometry(0.85, 0.01, 0.85);
+        const waterMat = new THREE.MeshStandardMaterial({
+          color: '#40a0ff',
+          roughness: 0.1,
+          metalness: 0.3,
+          transparent: true,
+          opacity: 0.65,
+        });
+        const water = new THREE.Mesh(waterGeo, waterMat);
+        water.position.set(c, pillarH, r);
+        water.visible = false;
+        this.scene.add(water);
+
+        // Visited overlay (initially hidden)
+        const topGeo = new THREE.BoxGeometry(0.86, 0.04, 0.86);
+        const topMat = new THREE.MeshStandardMaterial({
+          color: '#ffffff',
+          roughness: 0.6,
+          transparent: true,
+          opacity: 0.3,
+          depthWrite: false,
+        });
+        const top = new THREE.Mesh(topGeo, topMat);
+        top.position.set(c, pillarH + 0.01, r);
+        top.visible = false;
+        this.scene.add(top);
+
+        this.cellMeshes[r][c] = { pillar, water, top };
+      }
+    }
+
+    this.camera.lookAt((n - 1) / 2, 0, (m - 1) / 2);
+    this.controls.target.set((n - 1) / 2, 0, (m - 1) / 2);
+    this.controls.update();
+  }
+
+  _heightColor(h, maxH) {
+    if (maxH === 0) return '#66bb6a';
+    const t = h / maxH;
+    const hue = (1 - t) * 0.33;
+    const color = new THREE.Color();
+    color.setHSL(hue, 0.65, 0.55);
+    return color;
+  }
+
+  updateWater(r, c, waterHeight, totalScale) {
+    const mesh = this.cellMeshes[r]?.[c];
+    if (!mesh) return;
+    if (waterHeight > 0) {
+      mesh.water.visible = true;
+      const wH = Math.max(waterHeight * totalScale, 0.04);
+      mesh.water.scale.y = wH / 0.01;
+      mesh.water.position.y = mesh.pillar.position.y + mesh.pillar.geometry.parameters.height / 2 + wH / 2;
+    } else {
+      mesh.water.visible = false;
+    }
+  }
+
+  markVisited(r, c) {
+    const mesh = this.cellMeshes[r]?.[c];
+    if (!mesh) return;
+    mesh.top.visible = true;
+  }
+
+  highlightCell(r, c) {
+    this.clearHighlight();
+    const mesh = this.cellMeshes[r]?.[c];
+    if (!mesh) return;
+
+    const ringGeo = new THREE.TorusGeometry(0.5, 0.06, 16, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color: '#ffd740' });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.copy(mesh.pillar.position);
+    ring.position.y += mesh.pillar.geometry.parameters.height / 2 + 0.1;
+    ring.name = 'highlight-ring';
+    this.scene.add(ring);
+    this.currentHighlight = ring;
+
+    mesh.pillar.material.emissive = new THREE.Color('#332200');
+    mesh.pillar.material.emissiveIntensity = 0.6;
+  }
+
+  highlightNeighbors(neighbors) {
+    this.clearNeighborHighlights();
+    for (const { r, c } of neighbors) {
+      const mesh = this.cellMeshes[r]?.[c];
+      if (!mesh) continue;
+      const ringGeo = new THREE.TorusGeometry(0.42, 0.05, 8, 24);
+      const ringMat = new THREE.MeshBasicMaterial({ color: '#4fc3f7' });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.copy(mesh.pillar.position);
+      ring.position.y += mesh.pillar.geometry.parameters.height / 2 + 0.06;
+      ring.name = 'neighbor-ring';
+      this.scene.add(ring);
+      this.neighborHighlights.push(ring);
+    }
+  }
+
+  clearHighlight() {
+    if (this.currentHighlight) {
+      // Reset emissive on all pillars
+      for (const row of this.cellMeshes) {
+        for (const { pillar } of row) {
+          if (pillar.material.emissive) {
+            pillar.material.emissive = new THREE.Color(0);
+            pillar.material.emissiveIntensity = 0;
+          }
+        }
+      }
+      this.scene.remove(this.currentHighlight);
+      this.currentHighlight.geometry.dispose();
+      this.currentHighlight.material.dispose();
+      this.currentHighlight = null;
+    }
+  }
+
+  clearNeighborHighlights() {
+    for (const ring of this.neighborHighlights) {
+      this.scene.remove(ring);
+      ring.geometry.dispose();
+      ring.material.dispose();
+    }
+    this.neighborHighlights = [];
+  }
+
+  getIntersection(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const pillars = [];
+    for (const row of this.cellMeshes) {
+      for (const { pillar } of row) {
+        pillars.push(pillar);
+      }
+    }
+    const intersects = this.raycaster.intersectObjects(pillars);
+    if (intersects.length > 0) {
+      return intersects[0].object.userData;
+    }
+    return null;
+  }
+
+  _clearScene() {
+    this.clearHighlight();
+    this.clearNeighborHighlights();
+    this.cellMeshes = [];
+    const toRemove = [];
+    this.scene.traverse(child => {
+      if (child !== this.scene) toRemove.push(child);
+    });
+    for (const child of toRemove) {
+      this.scene.remove(child);
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => m.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+    }
+  }
+
+  _animate() {
+    requestAnimationFrame(this._animate);
+    this.controls.update();
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  onResize() {
+    this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+  }
+}
+
+// Expose to global scope so non-module scripts can access it
+window.Scene3D = Scene3D;
 </script>
 </body>
 </html>
