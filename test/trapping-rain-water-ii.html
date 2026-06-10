@@ -70,6 +70,11 @@
     border-color: rgba(255,255,255,0.3);
   }
   #controls button:active { transform: scale(0.96); }
+  #controls button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
   #controls button.primary {
     background: var(--accent);
     color: #1a1a2e;
@@ -223,7 +228,7 @@ class MinHeap {
   }
 
   peek() {
-    return this.heap[0] || null;
+    return this.heap.length > 0 ? this.heap[0] : null;
   }
 
   _bubbleUp(i) {
@@ -852,6 +857,7 @@ class Scene3D {
       const wH = Math.max(waterHeight * totalScale, 0.04);
       mesh.water.scale.y = wH / 0.01;
       mesh.water.position.y = mesh.pillar.position.y + mesh.pillar.geometry.parameters.height / 2 + wH / 2;
+      mesh.water.userData.baseY = mesh.water.position.y;
     } else {
       mesh.water.visible = false;
     }
@@ -968,6 +974,20 @@ class Scene3D {
   _animate() {
     requestAnimationFrame(this._animate);
     this.controls.update();
+
+    // Subtle water bobbing animation
+    const time = performance.now() * 0.001;
+    for (const row of this.cellMeshes) {
+      for (const { water } of row) {
+        if (water.visible) {
+          const baseY = water.userData.baseY;
+          if (baseY !== undefined) {
+            water.position.y = baseY + Math.sin(time * 3 + water.position.x) * 0.015;
+          }
+        }
+      }
+    }
+
     this.renderer.render(this.scene, this.camera);
   }
 
