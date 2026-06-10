@@ -799,8 +799,10 @@ class Scene3D {
         const geo = new THREE.BoxGeometry(0.9, pillarH, 0.9);
         const mat = new THREE.MeshStandardMaterial({
           color,
-          roughness: 0.35,
-          metalness: 0.15,
+          roughness: 0.25,
+          metalness: 0.05,
+          emissive: color,
+          emissiveIntensity: 0.15,
         });
         const pillar = new THREE.Mesh(geo, mat);
         pillar.position.set(c, pillarH / 2, r);
@@ -847,11 +849,13 @@ class Scene3D {
   }
 
   _heightColor(h, maxH) {
-    if (maxH === 0) return '#66bb6a';
+    if (maxH === 0) return '#4caf50';
     const t = h / maxH;
-    const hue = (1 - t) * 0.33;
+    // Map height to distinct, vivid colors:
+    // low (0) = blue → mid = green → yellow → orange → high (max) = red
+    const hue = 0.66 - t * 0.66; // 0.66(blue) → 0.33(green) → 0.16(yellow) → 0.08(orange) → 0(red)
     const color = new THREE.Color();
-    color.setHSL(hue, 0.7, 0.65);
+    color.setHSL(hue, 0.95, 0.55);
     return color;
   }
 
