@@ -1,0 +1,33 @@
+{
+  "train_shape": [
+    150000,
+    31
+  ],
+  "test_shape": [
+    50000,
+    30
+  ],
+  "clean_train_rows": 135884,
+  "feature_count": 36,
+  "test_feature_count": 36,
+  "feature_columns_match": true,
+  "price_missing_after_clean": 0,
+  "negative_price_after_clean": 0,
+  "raw_train_rows": 150000,
+  "schema_shift_removed": 14116,
+  "invalid_price_removed": 0,
+  "models": [
+    {
+      "name": "RandomForest 主模型",
+      "mae": 622.5255326669934
+    },
+    {
+      "name": "Ridge 基线模型",
+      "mae": 2124.5482994133326
+    }
+  ],
+  "best_model": "RandomForest 主模型",
+  "best_mae": 622.5255326669934,
+  "notebook": "C:\\Users\\y2003\\Downloads\\二手车价格预测分析报告.ipynb",
+  "pdf": "C:\\Users\\y2003\\Downloads\\二手车价格预测分析报告.pdf"
+}

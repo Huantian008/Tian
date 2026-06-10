@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.homework9.mapper.StudentMapper">
+    <select id="findAll" resultType="Student">
+        select id, student_no, name, gender, age, class_name, phone
+        from student
+        order by id
+    </select>
+
+    <select id="search" parameterType="string" resultType="Student">
+        select id, student_no, name, gender, age, class_name, phone
+        from student
+        where student_no like concat('%', #{keyword}, '%')
+           or name like concat('%', #{keyword}, '%')
+        order by id
+    </select>
+
+    <select id="findById" parameterType="int" resultType="Student">
+        select id, student_no, name, gender, age, class_name, phone
+        from student
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="Student" useGeneratedKeys="true" keyProperty="id">
+        insert into student (student_no, name, gender, age, class_name, phone)
+        values (#{studentNo}, #{name}, #{gender}, #{age}, #{className}, #{phone})
+    </insert>
+
+    <update id="update" parameterType="Student">
+        update student
+        set student_no = #{studentNo},
+            name = #{name},
+            gender = #{gender},
+            age = #{age},
+            class_name = #{className},
+            phone = #{phone}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="int">
+        delete from student where id = #{id}
+    </delete>
+</mapper>

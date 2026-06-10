@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.homework8.mapper.StudentMapper">
+    <resultMap id="studentResultMap" type="Student">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="age" column="age"/>
+        <result property="sex" column="sex"/>
+        <result property="address" column="address"/>
+    </resultMap>
+
+    <sql id="baseColumns">
+        id, name, age, sex, address
+    </sql>
+
+    <insert id="insert" parameterType="Student" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO student (name, age, sex, address)
+        VALUES (#{name}, #{age}, #{sex}, #{address})
+    </insert>
+
+    <update id="update" parameterType="Student">
+        UPDATE student
+        SET name = #{name},
+            age = #{age},
+            sex = #{sex},
+            address = #{address}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM student WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultMap="studentResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM student
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByNameLike" resultMap="studentResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM student
+        <where>
+            <if test="name != null and name != ''">
+                name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY id
+    </select>
+
+    <select id="searchByNameAndAddress" resultMap="studentResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM student
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="address != null and address != ''">
+                AND address LIKE CONCAT('%', #{address}, '%')
+            </if>
+        </where>
+        ORDER BY id
+    </select>
+
+    <select id="findAll" resultMap="studentResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM student
+        ORDER BY id
+    </select>
+</mapper>
