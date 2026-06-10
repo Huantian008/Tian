@@ -266,6 +266,20 @@ class RainWaterEngine {
   }
 
   _initBoundary() {
+    // Handle degenerate grids
+    if (this.m <= 2 || this.n <= 2) {
+      // All cells are boundary cells
+      for (let i = 0; i < this.m; i++) {
+        for (let j = 0; j < this.n; j++) {
+          this._pushIfNotVisited(i, j);
+        }
+      }
+      // No interior cells to trap water
+      if (this.m <= 2 && this.n <= 2) {
+        this.isComplete = this.heap.size() === 0;
+      }
+      return;
+    }
     for (let j = 0; j < this.n; j++) {
       this._pushIfNotVisited(0, j);
       this._pushIfNotVisited(this.m - 1, j);
@@ -335,6 +349,8 @@ class RainWaterEngine {
     }
 
     this.stepHistory.push(step);
+    // Update totalWater in snapshot to reflect post-processing value
+    step.totalWater = this.totalWater;
     return step;
   }
 
