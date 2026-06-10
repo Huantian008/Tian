@@ -663,7 +663,6 @@ function init() {
   ui.hideLoading();
 }
 
-init();
 </script>
 <script type="module">
 import * as THREE from 'three';
@@ -981,6 +980,9 @@ class Scene3D {
 
 // Expose to global scope so non-module scripts can access it
 window.Scene3D = Scene3D;
+
+// Boot the application after module script loads
+init();
 </script>
 </body>
 </html>
