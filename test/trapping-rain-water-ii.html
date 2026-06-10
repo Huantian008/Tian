@@ -244,6 +244,134 @@ class MinHeap {
   snapshot() {
     return this.heap.map(item => ({ ...item }));
   }
+
+class RainWaterEngine {
+  constructor(heightMap) {
+    this.heightMap = heightMap;
+    this.m = heightMap.length;
+    this.n = heightMap[0].length;
+    this.reset();
+  }
+
+  reset() {
+    this.visited = Array.from({ length: this.m }, () => new Array(this.n).fill(false));
+    this.waterMap = Array.from({ length: this.m }, () => new Array(this.n).fill(0));
+    this.heap = new MinHeap();
+    this.waterLevel = 0;
+    this.totalWater = 0;
+    this.stepHistory = [];
+    this.isComplete = false;
+    this._initBoundary();
+  }
+
+  _initBoundary() {
+    for (let j = 0; j < this.n; j++) {
+      this._pushIfNotVisited(0, j);
+      this._pushIfNotVisited(this.m - 1, j);
+    }
+    for (let i = 1; i < this.m - 1; i++) {
+      this._pushIfNotVisited(i, 0);
+      this._pushIfNotVisited(i, this.n - 1);
+    }
+  }
+
+  _pushIfNotVisited(r, c) {
+    if (this.visited[r][c]) return;
+    this.visited[r][c] = true;
+    this.heap.push({ r, c, h: this.heightMap[r][c] });
+  }
+
+  canAdvance() {
+    return !this.isComplete && this.heap.size() > 0;
+  }
+
+  /**
+   * Execute one step. Returns a Step object describing what happened,
+   * or null if the algorithm is done.
+   */
+  step() {
+    if (this.isComplete) return null;
+    if (this.heap.size() === 0) {
+      this.isComplete = true;
+      return { type: 'complete', totalWater: this.totalWater };
+    }
+
+    const current = this.heap.pop();
+    this.waterLevel = Math.max(this.waterLevel, current.h);
+
+    const step = {
+      type: 'process',
+      cell: { r: current.r, c: current.c },
+      height: current.h,
+      waterLevel: this.waterLevel,
+      neighbors: [],
+      totalWater: this.totalWater,
+      heapSize: this.heap.size(),
+      visitedCount: this._countVisited(),
+    };
+
+    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    for (const [dr, dc] of dirs) {
+      const nr = current.r + dr;
+      const nc = current.c + dc;
+      if (nr < 0 || nr >= this.m || nc < 0 || nc >= this.n) continue;
+      if (this.visited[nr][nc]) continue;
+
+      this.visited[nr][nc] = true;
+      const nh = this.heightMap[nr][nc];
+      const water = Math.max(0, this.waterLevel - nh);
+      if (water > 0) {
+        this.waterMap[nr][nc] = water;
+        this.totalWater += water;
+      }
+      this.heap.push({ r: nr, c: nc, h: nh });
+
+      step.neighbors.push({
+        r: nr, c: nc,
+        height: nh,
+        water: water,
+      });
+    }
+
+    this.stepHistory.push(step);
+    return step;
+  }
+
+  /**
+   * Undo the last step. Returns true if a step was undone.
+   */
+  undo() {
+    if (this.stepHistory.length === 0) return false;
+    const step = this.stepHistory.pop();
+    this.isComplete = false;
+
+    // Restore the popped cell to the heap
+    this.heap.push({ r: step.cell.r, c: step.cell.c, h: step.height });
+    this.waterLevel = this.stepHistory.length > 0
+      ? this.stepHistory[this.stepHistory.length - 1].waterLevel
+      : 0;
+
+    // Undo neighbor processing
+    for (const nb of step.neighbors) {
+      this.visited[nb.r][nb.c] = false;
+      if (nb.water > 0) {
+        this.waterMap[nb.r][nb.c] = 0;
+        this.totalWater -= nb.water;
+      }
+    }
+
+    return true;
+  }
+
+  _countVisited() {
+    let count = 0;
+    for (let i = 0; i < this.m; i++) {
+      for (let j = 0; j < this.n; j++) {
+        if (this.visited[i][j]) count++;
+      }
+    }
+    return count;
+  }
 }
 </script>
 </body>
