@@ -193,5 +193,58 @@
     </label>
     <button id="btn-random" class="warn">🔄 随机生成</button>
   </div>
+<script>
+class MinHeap {
+  constructor() {
+    this.heap = [];
+  }
+
+  size() { return this.heap.length; }
+
+  push(item) {
+    this.heap.push(item);
+    this._bubbleUp(this.heap.length - 1);
+  }
+
+  pop() {
+    if (this.heap.length === 1) return this.heap.pop();
+    const top = this.heap[0];
+    this.heap[0] = this.heap.pop();
+    this._sinkDown(0);
+    return top;
+  }
+
+  peek() {
+    return this.heap[0] || null;
+  }
+
+  _bubbleUp(i) {
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (this.heap[i].h >= this.heap[parent].h) break;
+      [this.heap[i], this.heap[parent]] = [this.heap[parent], this.heap[i]];
+      i = parent;
+    }
+  }
+
+  _sinkDown(i) {
+    const n = this.heap.length;
+    while (true) {
+      let smallest = i;
+      const l = (i << 1) + 1;
+      const r = (i << 1) + 2;
+      if (l < n && this.heap[l].h < this.heap[smallest].h) smallest = l;
+      if (r < n && this.heap[r].h < this.heap[smallest].h) smallest = r;
+      if (smallest === i) break;
+      [this.heap[i], this.heap[smallest]] = [this.heap[smallest], this.heap[i]];
+      i = smallest;
+    }
+  }
+
+  snapshot() {
+    return this.heap.map(item => ({ ...item }));
+  }
+}
+</script>
 </body>
 </html>
