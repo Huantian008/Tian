@@ -190,6 +190,9 @@ test('斜树预设:结点数和链式结构', () => {
   let p = L; let chain = 0;
   while (p) { chain++; assert.strictEqual(p.right, null); p = p.left; } // 左斜无右子
   assert.strictEqual(chain, 5);
+  let q = R; let chain2 = 0;
+  while (q) { chain2++; assert.strictEqual(q.left, null); q = q.right; } // 右斜无左子
+  assert.strictEqual(chain2, 5);
 });
 
 test('布局:王道例题各结点坐标符合满二叉树下标法', () => {
