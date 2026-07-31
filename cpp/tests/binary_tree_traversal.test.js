@@ -144,6 +144,18 @@ test('auxHtml:递归模式标题为递归调用栈,空状态有提示', () => {
   assert.ok(empty.includes('尚未开始'), empty);
 });
 
+// ===== Task 8: 自检集成 =====
+test('runSelfTests:Node 环境全部通过(纯逻辑检查,无 DOM)', () => {
+  const r = T.runSelfTests();
+  assert.strictEqual(r.fail, 0, '自检失败数应为 0,实际 ' + JSON.stringify(r));
+  assert.ok(r.pass >= 7, '应有至少 7 项纯逻辑自检,实际 ' + r.pass);
+});
+
+test('MODES 表:7 种模式,id 唯一', () => {
+  assert.strictEqual(T.MODES.length, 7);
+  assert.strictEqual(new Set(T.MODES.map(m => m.id)).size, 7);
+});
+
 // ===== Task 2: 树模型 / 预设 / 布局 =====
 const CANONICAL = T.PRESET_TREES[0].root; // 王道例题 A/B/C/D/E/F/G
 

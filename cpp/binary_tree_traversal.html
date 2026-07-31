@@ -308,7 +308,48 @@ const TraversalViz = (() => {
     }
     return { pass, fail };
   }
-  function initUI() { /* Task 8 填充 */ }
+  function initUI() {
+    const modeSel = document.getElementById('mode-select');
+    MODES.forEach(m => { const o = document.createElement('option'); o.value = m.id; o.textContent = m.label; modeSel.appendChild(o); });
+    const treeSel = document.getElementById('tree-select');
+    PRESET_TREES.forEach((t, i) => { const o = document.createElement('option'); o.value = i; o.textContent = t.name; treeSel.appendChild(o); });
+    modeSel.addEventListener('change', () => { currentModeId = modeSel.value; rebuild(); });
+    treeSel.addEventListener('change', () => { currentTree = PRESET_TREES[+treeSel.value].root; rebuild(); });
+    document.getElementById('btn-random').addEventListener('click', () => {
+      currentTree = generateRandomTree(Date.now() >>> 0, { degenerate: Math.random() < 0.3 });
+      rebuild();
+    });
+    const speed = document.getElementById('speed-slider');
+    const speedLabel = document.getElementById('speed-label');
+    speed.addEventListener('input', () => {
+      speedLabel.textContent = (speed.value / 100).toFixed(1) + '×';
+      if (player) player.setSpeed(speed.value / 100);
+    });
+    document.getElementById('btn-play').addEventListener('click', () => {
+      if (player.isPlaying()) player.pause(); else player.play();
+      document.getElementById('btn-play').textContent = player.isPlaying() ? '⏸ 暂停' : '▶ 播放';
+    });
+    document.getElementById('btn-next').addEventListener('click', () => { if (player) player.stepForward(); });
+    document.getElementById('btn-prev').addEventListener('click', () => { if (player) player.stepBack(); });
+    document.getElementById('btn-reset').addEventListener('click', () => { if (player) player.reset(); });
+    rebuild();
+    // DOM 自检(仅浏览器)
+    selfTestChecks.push({
+      name: '画布渲染:王道例题 7 圆 6 边',
+      fn: () => {
+        const svg = document.getElementById('tree-canvas');
+        const layout = computeLayout(currentTree);
+        renderTree(svg, currentTree, layout, { colors: new Map(), result: [], aux: [], lastEvent: null });
+        const circles = svg.querySelectorAll('circle').length;
+        const lines = svg.querySelectorAll('line').length;
+        if (circles !== 7 || lines !== 6) throw new Error('circles=' + circles + ' lines=' + lines);
+      },
+    });
+    const r = runSelfTests();
+    const badge = document.getElementById('self-test-badge');
+    badge.textContent = '自检 ' + r.pass + '/' + (r.pass + r.fail) + ' 通过';
+    badge.className = r.fail === 0 ? 'pass' : 'fail';
+  }
 
   // ===== 状态应用:纯函数,由步骤数组 + 索引推导完整状态 =====
   function applySteps(steps, upto) {
@@ -442,10 +483,95 @@ const TraversalViz = (() => {
     const stepBack = () => { stop(); if (index > 0) index--; emit(); };
     const reset = () => { stop(); index = 0; emit(); };
     const setSpeed = (v) => { speed = v; if (timer) { stop(); play(); } };
-    return { play, pause, stepForward, stepBack, reset, setSpeed, getIndex: () => index, getState: state };
+    return { play, pause, stepForward, stepBack, reset, setSpeed, getIndex: () => index, getState: state, isPlaying: () => timer !== null };
   }
 
-  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, genIterativeSteps, genLevelSteps, generateRandomTree, stepsToSequence, applySteps, createPlayer, sequenceHtml, auxHtml, renderSequence, renderAuxPanel, renderTree, renderTreeInfo };
+  const MODES = [
+    { id: 'rec-pre',  label: '递归先序(根→左→右)',       gen: (t) => genRecursiveSteps(t, 'pre') },
+    { id: 'rec-in',   label: '递归中序(左→根→右)',       gen: (t) => genRecursiveSteps(t, 'in') },
+    { id: 'rec-post', label: '递归后序(左→右→根)',       gen: (t) => genRecursiveSteps(t, 'post') },
+    { id: 'itr-pre',  label: '非递归先序(栈模拟)',        gen: (t) => genIterativeSteps(t, 'pre') },
+    { id: 'itr-in',   label: '非递归中序(栈模拟)',        gen: (t) => genIterativeSteps(t, 'in') },
+    { id: 'itr-post', label: '非递归后序(栈·tag 标记)',   gen: (t) => genIterativeSteps(t, 'post') },
+    { id: 'level',    label: '层次遍历(队列)',            gen: (t) => genLevelSteps(t) },
+  ];
+  let currentTree = null, currentModeId = 'rec-pre', player = null;
+  const getMode = () => MODES.find(m => m.id === currentModeId);
+
+  function rebuild() {
+    currentTree = currentTree || PRESET_TREES[0].root;
+    const steps = getMode().gen(currentTree);
+    const full = stepsToSequence(steps);
+    player = createPlayer({ getSteps: () => steps, onChange: onPlayerChange });
+    onPlayerChange(player.getState(), 0, steps.length);
+  }
+
+  function onPlayerChange(state, index, total) {
+    const mode = getMode();
+    const svg = document.getElementById('tree-canvas');
+    const layout = computeLayout(currentTree);
+    renderTree(svg, currentTree, layout, state);
+    renderSequence(document.getElementById('result-sequence'), state, stepsToSequence(mode.gen(currentTree)));
+    renderAuxPanel(document.getElementById('aux-panel'), currentModeId, state);
+    renderTreeInfo(document.getElementById('tree-info'), currentTree);
+    document.getElementById('btn-play').textContent = player.isPlaying() ? '⏸ 暂停' : '▶ 播放';
+  }
+
+  // ===== 自检注册(纯逻辑,模块加载即注册,浏览器/Node 皆可运行) =====
+  function registerSelfTests() {
+    const t = (name, fn) => selfTestChecks.push({ name, fn });
+    t('王道例题:三种递归遍历序列', () => {
+      assertSeq('ABDECFG', 'pre'); assertSeq('DBEAFCG', 'in'); assertSeq('DEBFGCA', 'post');
+      function assertSeq(expected, mode) {
+        const got = stepsToSequence(genRecursiveSteps(PRESET_TREES[0].root, mode)).join('');
+        if (got !== expected) throw new Error(mode + ': ' + got + ' != ' + expected);
+      }
+    });
+    t('王道例题:层次遍历序列', () => {
+      const got = stepsToSequence(genLevelSteps(PRESET_TREES[0].root)).join('');
+      if (got !== 'ABCDEFG') throw new Error(got);
+    });
+    t('交叉验证:非递归 = 递归(5 棵预设树)', () => {
+      for (const tree of PRESET_TREES) for (const mode of ['pre', 'in', 'post']) {
+        const a = stepsToSequence(genRecursiveSteps(tree.root, mode)).join('');
+        const b = stepsToSequence(genIterativeSteps(tree.root, mode)).join('');
+        if (a !== b) throw new Error(tree.name + ' ' + mode);
+      }
+    });
+    t('随机树约束:常规 8~15 结点/高<=5,退化 5~8 结点/高<=8', () => {
+      for (let seed = 1; seed <= 20; seed++) {
+        const r = generateRandomTree(seed, { degenerate: false });
+        if (size(r) < 8 || size(r) > 15 || height(r) > 5) throw new Error('seed ' + seed);
+      }
+      for (let seed = 1; seed <= 10; seed++) {
+        const r = generateRandomTree(seed, { degenerate: true });
+        if (size(r) < 5 || size(r) > 8 || height(r) > 8) throw new Error('degenerate seed ' + seed);
+      }
+    });
+    t('边界:空树/单结点遍历', () => {
+      for (const g of [genRecursiveSteps, genIterativeSteps]) {
+        if (g(null, 'pre').length !== 0) throw new Error('空树');
+        if (stepsToSequence(g(PRESET_TREES[2].root, 'in')).join('') !== 'A') throw new Error('单结点');
+      }
+    });
+    t('播放器:7 种模式单步走完全程序列正确', () => {
+      for (const m of MODES) {
+        const steps = m.gen(PRESET_TREES[0].root);
+        const p = createPlayer({ getSteps: () => steps });
+        while (p.getIndex() < steps.length) p.stepForward();
+        if (p.getState().result.length !== size(PRESET_TREES[0].root)) throw new Error(m.id);
+      }
+    });
+    t('布局:王道例题坐标无重叠', () => {
+      const map = computeLayout(PRESET_TREES[0].root);
+      const keys = [...map.values()].map(c => c.x.toFixed(6) + ',' + c.y.toFixed(6));
+      if (new Set(keys).size !== map.size) throw new Error('重叠');
+    });
+  }
+
+  registerSelfTests();
+
+  return { runSelfTests, initUI, selfTestChecks, MODES, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, genIterativeSteps, genLevelSteps, generateRandomTree, stepsToSequence, applySteps, createPlayer, sequenceHtml, auxHtml, renderSequence, renderAuxPanel, renderTree, renderTreeInfo };
 })();
 globalThis.TraversalViz = TraversalViz;
 if (typeof document !== 'undefined') { TraversalViz.initUI(); } // Node 环境跳过 DOM 初始化
