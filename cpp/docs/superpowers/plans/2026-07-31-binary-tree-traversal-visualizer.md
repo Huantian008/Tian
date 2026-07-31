@@ -133,9 +133,10 @@ Expected: 崩溃或报错(`ENOENT`,HTML 文件不存在)。
   .t-node.push circle { fill: var(--c-push); stroke: var(--c-push); }
   .t-node.pop circle { fill: var(--c-pop); stroke: var(--c-pop); }
   .t-node.visit circle { fill: var(--c-visit); stroke: var(--c-visit); }
-  .t-node text { fill: #fff; font-size: 17px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .t-node text { fill: #22262b; font-size: 17px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .t-node.enter text, .t-node.push text, .t-node.pop text, .t-node.visit text { fill: #fff; }
   .t-edge { stroke: var(--c-line); stroke-width: 2; }
-  .flash { animation: popflash .5s ease; }
+  .flash { animation: popflash .5s ease; transform-box: fill-box; transform-origin: center; }
   @keyframes popflash { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
   .legend { font-size: 12px; color: #666; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 10px; }
   .legend span::before { content: ''; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
@@ -292,6 +293,9 @@ test('斜树预设:结点数和链式结构', () => {
   let p = L; let chain = 0;
   while (p) { chain++; assert.strictEqual(p.right, null); p = p.left; } // 左斜无右子
   assert.strictEqual(chain, 5);
+  let q = R; let chain2 = 0;
+  while (q) { chain2++; assert.strictEqual(q.left, null); q = q.right; } // 右斜无左子
+  assert.strictEqual(chain2, 5);
 });
 
 test('布局:王道例题各结点坐标符合满二叉树下标法', () => {
@@ -967,7 +971,7 @@ Expected: `applySteps is not a function` 失败。
       if (index >= getSteps().length) index = 0;
       emit();
       timer = setInterval(() => {
-        if (index >= getSteps().length) { stop(); return; } // 走完全程才停,最后一步也要 emit
+        if (index >= getSteps().length) { emit(); stop(); return; } // 走完全程:最后一次 emit 刷新播放按钮文案后停止
         index++; emit();
       }, 900 / speed);
     };
@@ -1084,6 +1088,7 @@ Expected: `sequenceHtml is not a function` 失败。
   const MODE_LABEL = { 'rec-pre': '递归调用栈', 'rec-in': '递归调用栈', 'rec-post': '递归调用栈',
                        'itr-pre': '辅助栈', 'itr-in': '辅助栈', 'itr-post': '辅助栈', 'level': '队列' };
   const EV_TEXT = { enter: '进入', exit: '返回', push: '入栈', pop: '出栈', enqueue: '入队', dequeue: '出队', visit: '访问' };
+  const EV_COLOR = { enter: 'var(--c-enter)', exit: 'var(--c-pop)', push: 'var(--c-push)', pop: 'var(--c-pop)', enqueue: 'var(--c-push)', dequeue: 'var(--c-pop)', visit: 'var(--c-visit)' };
 
   function sequenceHtml(state, fullSequence) {
     let html = '';
@@ -1098,7 +1103,7 @@ Expected: `sequenceHtml is not a function` 失败。
   function auxHtml(modeId, state) {
     if (!state.lastEvent) return '<span class="aux-empty">尚未开始 —— 点击 ▶ 播放或 ⏭ 单步前进</span>';
     const ev = state.lastEvent;
-    const title = '<div class="aux-title"><b>' + MODE_LABEL[modeId] + '</b> · 当前动作:<span style="color:var(--c-pop)">' +
+    const title = '<div class="aux-title"><b>' + MODE_LABEL[modeId] + '</b> · 当前动作:<span style="color:' + EV_COLOR[ev.type] + '">' +
                   EV_TEXT[ev.type] + ' ' + ev.node.val + '</span></div>';
     const items = state.aux;
     if (!items.length) return title + '<span class="aux-empty">(空)</span>';
@@ -1226,23 +1231,22 @@ Expected: `MODES is not defined` / 自检通过数为 0。
     { id: 'itr-post', label: '非递归后序(栈·tag 标记)',   gen: (t) => genIterativeSteps(t, 'post') },
     { id: 'level',    label: '层次遍历(队列)',            gen: (t) => genLevelSteps(t) },
   ];
-  let currentTree = null, currentModeId = 'rec-pre', player = null;
+  let currentTree = null, currentModeId = 'rec-pre', player = null, currentFull = [];
   const getMode = () => MODES.find(m => m.id === currentModeId);
 
   function rebuild() {
     if (player) player.pause(); // 停掉旧播放器,避免播放中切换导致定时器泄漏/双动画竞争
     currentTree = currentTree || PRESET_TREES[0].root;
-    const steps = getMode().gen(currentTree);
+    const steps = getMode().gen(currentTree); currentFull = stepsToSequence(steps);
     player = createPlayer({ getSteps: () => steps, onChange: onPlayerChange });
     onPlayerChange(player.getState(), 0, steps.length);
   }
 
   function onPlayerChange(state, index, total) {
-    const mode = getMode();
     const svg = document.getElementById('tree-canvas');
     const layout = computeLayout(currentTree);
     renderTree(svg, currentTree, layout, state);
-    renderSequence(document.getElementById('result-sequence'), state, stepsToSequence(mode.gen(currentTree)));
+    renderSequence(document.getElementById('result-sequence'), state, currentFull);
     renderAuxPanel(document.getElementById('aux-panel'), currentModeId, state);
     renderTreeInfo(document.getElementById('tree-info'), currentTree);
     document.getElementById('btn-play').textContent = player.isPlaying() ? '⏸ 暂停' : '▶ 播放';
@@ -1333,7 +1337,7 @@ Expected: `MODES is not defined` / 自检通过数为 0。
     rebuild();
     // DOM 自检(仅浏览器)
     selfTestChecks.push({
-      name: '画布渲染:王道例题 7 圆 6 边',
+      name: '画布渲染:7 圆 6 边,节点标签可见',
       fn: () => {
         const svg = document.getElementById('tree-canvas');
         const layout = computeLayout(currentTree);
@@ -1341,6 +1345,8 @@ Expected: `MODES is not defined` / 自检通过数为 0。
         const circles = svg.querySelectorAll('circle').length;
         const lines = svg.querySelectorAll('line').length;
         if (circles !== 7 || lines !== 6) throw new Error('circles=' + circles + ' lines=' + lines);
+        const fill = getComputedStyle(svg.querySelector('.t-node text')).fill;
+        if (fill === 'rgb(255, 255, 255)') throw new Error('节点标签白色不可见: ' + fill);
       },
     });
     const r = runSelfTests();
