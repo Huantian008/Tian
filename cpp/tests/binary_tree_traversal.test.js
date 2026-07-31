@@ -98,6 +98,52 @@ test('命名空间暴露 runSelfTests', () => {
   assert.strictEqual(typeof T.runSelfTests, 'function');
 });
 
+// ===== Task 7: 渲染(字符串构建器) =====
+const countOf = (html, substr) => html.split(substr).length - 1;
+
+test('sequenceHtml:未访问空心、已访问填橙、当前访问闪烁', () => {
+  const full = ['A', 'B', 'C'];
+  const html = T.sequenceHtml({ result: ['A'], lastEvent: { type: 'visit', node: { val: 'A' } } }, full);
+  assert.strictEqual(countOf(html, 'class="chip'), 3, html);
+  assert.ok(html.includes('chip done flash'), '当前访问的 A 应闪烁: ' + html);
+  assert.ok(html.includes('class="chip">B') && html.includes('class="chip">C'), 'B/C 应为未访问空心: ' + html);
+  assert.ok(!html.includes('chip done">B') && !html.includes('chip done">C'), 'B/C 不应已填色: ' + html);
+});
+
+test('sequenceHtml:未开始时无 done', () => {
+  const html = T.sequenceHtml({ result: [], lastEvent: null }, ['A', 'B']);
+  assert.strictEqual(countOf(html, 'chip done'), 0, html);
+});
+
+test('auxHtml:非递归中序压栈 3 步后,栈 [A,B,D],D 为栈顶高亮', () => {
+  const steps = T.genIterativeSteps(CANONICAL, 'in');
+  const st = T.applySteps(steps, 3); // push A, push B, push D
+  const html = T.auxHtml('itr-in', st);
+  assert.ok(html.includes('辅助栈'), html);
+  assert.ok(html.includes('入栈 D'), '应显示当前动作: ' + html);
+  assert.strictEqual(countOf(html, 'aux-cell'), 3, html);
+  assert.ok(html.includes('aux-cell top'), '栈顶应高亮: ' + html);
+  const cells = html.slice(html.indexOf('aux-cell')); // 只看格子区域,标题里有"入栈 D"
+  assert.ok(cells.indexOf('D') > cells.indexOf('B') && cells.indexOf('B') > cells.indexOf('A'), '顺序应为 A B D: ' + html);
+});
+
+test('auxHtml:层次遍历出队 B 后,队列剩 [C],C 为队首', () => {
+  const steps = T.genLevelSteps(CANONICAL);
+  const st = T.applySteps(steps, 7); // enq A, deq A, visit A, enq B, enq C, deq B, visit B
+  const html = T.auxHtml('level', st);
+  assert.ok(html.includes('队列'), html);
+  assert.strictEqual(countOf(html, 'aux-cell'), 1, html);
+  assert.ok(html.includes('aux-cell top">C'), '队首 C 应高亮: ' + html);
+});
+
+test('auxHtml:递归模式标题为递归调用栈,空状态有提示', () => {
+  const steps = T.genRecursiveSteps(CANONICAL, 'pre');
+  const st = T.applySteps(steps, 3); // enter A, visit A, enter B
+  assert.ok(T.auxHtml('rec-pre', st).includes('递归调用栈'));
+  const empty = T.auxHtml('rec-pre', T.applySteps(steps, 0));
+  assert.ok(empty.includes('尚未开始'), empty);
+});
+
 // ===== Task 2: 树模型 / 预设 / 布局 =====
 const CANONICAL = T.PRESET_TREES[0].root; // 王道例题 A/B/C/D/E/F/G
 

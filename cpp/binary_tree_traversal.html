@@ -56,6 +56,10 @@
   @keyframes popflash { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
   .legend { font-size: 12px; color: #666; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 10px; }
   .legend span::before { content: ''; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+  .aux-cell { min-width: 28px; height: 28px; border-radius: 6px; border: 2px solid var(--c-line); display: inline-flex; align-items: center; justify-content: center; font-weight: 600; background: #fff; margin-right: 4px; }
+  .aux-cell.top { border-color: var(--c-enter); background: #eef3fe; color: var(--c-enter); }
+  .aux-empty { color: #999; }
+  .aux-title { margin-bottom: 6px; }
 </style>
 </head>
 <body>
@@ -334,6 +338,90 @@ const TraversalViz = (() => {
     return { colors, result, aux, lastEvent };
   }
 
+  // ===== 渲染(字符串构建器 + DOM 画布) =====
+  const MODE_LABEL = { 'rec-pre': '递归调用栈', 'rec-in': '递归调用栈', 'rec-post': '递归调用栈',
+                       'itr-pre': '辅助栈', 'itr-in': '辅助栈', 'itr-post': '辅助栈', 'level': '队列' };
+  const EV_TEXT = { enter: '进入', exit: '返回', push: '入栈', pop: '出栈', enqueue: '入队', dequeue: '出队', visit: '访问' };
+
+  function sequenceHtml(state, fullSequence) {
+    let html = '';
+    fullSequence.forEach((val, i) => {
+      const done = i < state.result.length ? ' done' : '';
+      const flash = (i === state.result.length - 1 && state.lastEvent && state.lastEvent.type === 'visit') ? ' flash' : '';
+      html += '<div class="chip' + done + flash + '">' + val + '</div>';
+    });
+    return html;
+  }
+
+  function auxHtml(modeId, state) {
+    if (!state.lastEvent) return '<span class="aux-empty">尚未开始 —— 点击 ▶ 播放或 ⏭ 单步前进</span>';
+    const ev = state.lastEvent;
+    const title = '<div class="aux-title"><b>' + MODE_LABEL[modeId] + '</b> · 当前动作:<span style="color:var(--c-pop)">' +
+                  EV_TEXT[ev.type] + ' ' + ev.node.val + '</span></div>';
+    const items = state.aux;
+    if (!items.length) return title + '<span class="aux-empty">(空)</span>';
+    const isLevel = modeId === 'level';
+    let cells = '';
+    items.forEach((val, i) => {
+      const top = isLevel ? i === 0 : i === items.length - 1; // 队首 / 栈顶
+      cells += '<span class="aux-cell' + (top ? ' top' : '') + '">' + val + '</span>';
+    });
+    return title + cells;
+  }
+
+  function renderSequence(container, state, fullSequence) { container.innerHTML = sequenceHtml(state, fullSequence); }
+  function renderAuxPanel(container, modeId, state) { container.innerHTML = auxHtml(modeId, state); }
+
+  function renderTreeInfo(container, tree) {
+    container.textContent = tree ? '结点数: ' + size(tree) + ' · 高度: ' + height(tree) : '空树';
+  }
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const RENDER = { w: 800, h: 560, pad: 70, nodeR: 26 };
+  function renderTree(svg, tree, layout, state) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const W = RENDER.w, H = RENDER.h, P = RENDER.pad, R = RENDER.nodeR;
+    const px = (v) => P + v * (W - 2 * P);
+    const py = (v) => P + v * (H - 2 * P);
+    if (!tree) {
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', W / 2); t.setAttribute('y', H / 2);
+      t.setAttribute('text-anchor', 'middle'); t.setAttribute('fill', '#999'); t.setAttribute('font-size', '18');
+      t.textContent = '空树 —— 请选择其他树或点击 🎲 随机生成';
+      svg.appendChild(t);
+      return;
+    }
+    for (const [node, pos] of layout) { // 边
+      for (const child of [node.left, node.right]) {
+        if (child && layout.has(child)) {
+          const c = layout.get(child);
+          const line = document.createElementNS(NS, 'line');
+          line.setAttribute('class', 't-edge');
+          line.setAttribute('x1', px(pos.x)); line.setAttribute('y1', py(pos.y));
+          line.setAttribute('x2', px(c.x)); line.setAttribute('y2', py(c.y));
+          svg.appendChild(line);
+        }
+      }
+    }
+    for (const [node, pos] of layout) { // 结点
+      const g = document.createElementNS(NS, 'g');
+      const cls = 't-node' + (state.colors.has(node) ? ' ' + state.colors.get(node) : '');
+      if (state.lastEvent && state.lastEvent.node === node &&
+          (state.lastEvent.type === 'pop' || state.lastEvent.type === 'dequeue' || state.lastEvent.type === 'visit')) {
+        g.setAttribute('class', cls + ' flash');
+      } else {
+        g.setAttribute('class', cls);
+      }
+      const circle = document.createElementNS(NS, 'circle');
+      circle.setAttribute('cx', px(pos.x)); circle.setAttribute('cy', py(pos.y)); circle.setAttribute('r', R);
+      const text = document.createElementNS(NS, 'text');
+      text.setAttribute('x', px(pos.x)); text.setAttribute('y', py(pos.y));
+      text.textContent = node.val;
+      g.appendChild(circle); g.appendChild(text);
+      svg.appendChild(g);
+    }
+  }
+
   // ===== 播放器 =====
   function createPlayer({ getSteps, onChange }) {
     let index = 0, timer = null, speed = 1;
@@ -357,7 +445,7 @@ const TraversalViz = (() => {
     return { play, pause, stepForward, stepBack, reset, setSpeed, getIndex: () => index, getState: state };
   }
 
-  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, genIterativeSteps, genLevelSteps, generateRandomTree, stepsToSequence, applySteps, createPlayer };
+  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, genIterativeSteps, genLevelSteps, generateRandomTree, stepsToSequence, applySteps, createPlayer, sequenceHtml, auxHtml, renderSequence, renderAuxPanel, renderTree, renderTreeInfo };
 })();
 globalThis.TraversalViz = TraversalViz;
 if (typeof document !== 'undefined') { TraversalViz.initUI(); } // Node 环境跳过 DOM 初始化
