@@ -499,6 +499,7 @@ const TraversalViz = (() => {
   const getMode = () => MODES.find(m => m.id === currentModeId);
 
   function rebuild() {
+    if (player) player.pause(); // 停掉旧播放器,避免播放中切换导致定时器泄漏/双动画竞争
     currentTree = currentTree || PRESET_TREES[0].root;
     const steps = getMode().gen(currentTree);
     const full = stepsToSequence(steps);
