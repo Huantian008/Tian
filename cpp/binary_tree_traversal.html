@@ -155,6 +155,35 @@ const TraversalViz = (() => {
     walk(root, 1, 0);
     return map;
   }
+  // ===== 递归遍历步骤生成 =====
+  // mode: 'pre' | 'in' | 'post';aux = 当前递归调用栈帧(结点值),栈底在前
+  function genRecursiveSteps(root, mode) {
+    const steps = [];
+    const aux = [];
+    const rec = (node) => {
+      if (!node) return;
+      aux.push(node.val);
+      steps.push({ type: 'enter', node, aux: aux.slice() });
+      if (mode === 'pre') {
+        steps.push({ type: 'visit', node, aux: aux.slice() });
+        rec(node.left); rec(node.right);
+      } else if (mode === 'in') {
+        rec(node.left);
+        steps.push({ type: 'visit', node, aux: aux.slice() });
+        rec(node.right);
+      } else {
+        rec(node.left); rec(node.right);
+        steps.push({ type: 'visit', node, aux: aux.slice() });
+      }
+      aux.pop(); // 先弹出调用帧,再记录 exit 快照——显示"返回后"的调用栈
+      steps.push({ type: 'exit', node, aux: aux.slice() });
+    };
+    rec(root);
+    return steps;
+  }
+  function stepsToSequence(steps) {
+    return steps.filter(s => s.type === 'visit').map(s => s.node.val);
+  }
   const selfTestChecks = []; // { name, fn } —— 浏览器加载时运行
   function runSelfTests() {
     let pass = 0, fail = 0;
@@ -165,7 +194,7 @@ const TraversalViz = (() => {
     return { pass, fail };
   }
   function initUI() { /* Task 8 填充 */ }
-  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout };
+  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, stepsToSequence };
 })();
 globalThis.TraversalViz = TraversalViz;
 if (typeof document !== 'undefined') { TraversalViz.initUI(); } // Node 环境跳过 DOM 初始化

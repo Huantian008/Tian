@@ -91,6 +91,51 @@ test('布局:空树返回空 Map', () => {
   assert.strictEqual(T.computeLayout(null).size, 0);
 });
 
+// ===== Task 3: 递归遍历步骤生成 =====
+const seq = (steps) => T.stepsToSequence(steps).join('');
+
+test('递归先序:访问序列 = 根左右 A B D E C F G', () => {
+  assert.strictEqual(seq(T.genRecursiveSteps(CANONICAL, 'pre')), 'ABDECFG');
+});
+test('递归中序:访问序列 = 左根右 D B E A F C G', () => {
+  assert.strictEqual(seq(T.genRecursiveSteps(CANONICAL, 'in')), 'DBEAFCG');
+});
+test('递归后序:访问序列 = 左右根 D E B F G C A', () => {
+  assert.strictEqual(seq(T.genRecursiveSteps(CANONICAL, 'post')), 'DEBFGCA');
+});
+
+test('递归先序:完整步骤结构与调用栈快照(手算 21 步)', () => {
+  const steps = T.genRecursiveSteps(CANONICAL, 'pre');
+  assert.strictEqual(steps.length, 21);
+  // 事件类型序列(手算:E=enter V=visit X=exit)
+  const types = steps.map(s => ({ enter: 'E', visit: 'V', exit: 'X' }[s.type])).join('');
+  assert.strictEqual(types, 'EVEVEVXEVXXEVEVXEVXXX');
+  // 首步与末步
+  assert.deepStrictEqual(steps[0], { type: 'enter', node: CANONICAL, aux: ['A'] });
+  assert.strictEqual(steps[steps.length - 1].type, 'exit');
+  assert.deepStrictEqual(steps[steps.length - 1].aux, []);
+  // 调用栈快照里程碑:visit D 时栈为 [A,B,D];exit D 后为 [A,B]
+  const atVisitD = steps.findIndex(s => s.type === 'visit' && s.node.val === 'D');
+  assert.deepStrictEqual(steps[atVisitD].aux, ['A', 'B', 'D']);
+  const exitD = steps.findIndex(s => s.type === 'exit' && s.node.val === 'D');
+  assert.deepStrictEqual(steps[exitD].aux, ['A', 'B']);
+});
+
+test('递归:空树返回空步骤,单结点 3 步', () => {
+  assert.strictEqual(T.genRecursiveSteps(null, 'pre').length, 0);
+  const one = T.genRecursiveSteps(T.PRESET_TREES[2].root, 'in');
+  assert.strictEqual(one.length, 3);
+  assert.deepStrictEqual(one.map(s => s.type), ['enter', 'visit', 'exit']);
+  assert.strictEqual(seq(one), 'A');
+});
+
+test('递归:斜树序列正确(左斜 A→B→C→D→E)', () => {
+  const L = T.PRESET_TREES[3].root;
+  assert.strictEqual(seq(T.genRecursiveSteps(L, 'pre')), 'ABCDE');
+  assert.strictEqual(seq(T.genRecursiveSteps(L, 'in')), 'EDCBA'); // 中序左斜 = 从底往上
+  assert.strictEqual(seq(T.genRecursiveSteps(L, 'post')), 'EDCBA');
+});
+
 // ===== 运行器 =====
 let passed = 0, failed = 0;
 for (const { name, fn } of tests) {
