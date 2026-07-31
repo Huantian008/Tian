@@ -184,6 +184,68 @@ test('交叉验证:非递归 = 递归(全部预设树 × 3 模式)', () => {
   }
 });
 
+// ===== Task 5: 层次遍历 + 随机树 =====
+test('层次遍历:序列 A B C D E F G', () => {
+  assert.strictEqual(seq(T.genLevelSteps(CANONICAL)), 'ABCDEFG');
+});
+
+test('层次遍历:入队/出队/访问各 7 次,首步 enqueue A', () => {
+  const steps = T.genLevelSteps(CANONICAL);
+  assert.strictEqual(steps.length, 21);
+  assert.strictEqual(steps[0].type, 'enqueue');
+  assert.deepStrictEqual(steps[0].aux, ['A']);
+  const types = steps.map(s => s.type);
+  assert.strictEqual(types.filter(t => t === 'enqueue').length, 7);
+  assert.strictEqual(types.filter(t => t === 'dequeue').length, 7);
+  // 出队 A 并访问后,依次入队 B、C → aux = [B, C]
+  const afterVisitA = steps.findIndex(s => s.type === 'visit' && s.node.val === 'A');
+  assert.deepStrictEqual(steps[afterVisitA + 2].aux, ['B', 'C']);
+  // 出队 B 后队首是 C
+  const deqB = steps.findIndex(s => s.type === 'dequeue' && s.node.val === 'B');
+  assert.deepStrictEqual(steps[deqB].aux, ['C']);
+});
+
+test('层次遍历:空树/单结点', () => {
+  assert.strictEqual(T.genLevelSteps(null).length, 0);
+  assert.strictEqual(seq(T.genLevelSteps(T.PRESET_TREES[2].root)), 'A');
+});
+
+test('随机树:常规树 8~15 结点、高度<=5(种子 1..20)', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const root = T.generateRandomTree(seed, { degenerate: false });
+    const s = T.size(root), h = T.height(root);
+    assert.ok(s >= 8 && s <= 15, 'seed=' + seed + ' 结点数 ' + s);
+    assert.ok(h <= 5, 'seed=' + seed + ' 高度 ' + h);
+  }
+});
+
+test('随机树:退化树 5~8 结点、高度<=8(种子 1..10)', () => {
+  for (let seed = 1; seed <= 10; seed++) {
+    const root = T.generateRandomTree(seed, { degenerate: true });
+    const s = T.size(root), h = T.height(root);
+    assert.ok(s >= 5 && s <= 8, 'seed=' + seed + ' 结点数 ' + s);
+    assert.ok(h <= 8, 'seed=' + seed + ' 高度 ' + h);
+  }
+});
+
+test('随机树:同一种子可复现', () => {
+  const flatten = (n) => n ? [n.val, flatten(n.left), flatten(n.right)] : ['#'];
+  const a = T.generateRandomTree(42, { degenerate: false });
+  const b = T.generateRandomTree(42, { degenerate: false });
+  assert.deepStrictEqual(flatten(a), flatten(b));
+});
+
+test('交叉验证:非递归 = 递归(30 棵种子随机树,补 Task 4 遗留)', () => {
+  for (let seed = 1; seed <= 30; seed++) {
+    const root = T.generateRandomTree(seed, { degenerate: seed % 5 === 0 });
+    for (const mode of ['pre', 'in', 'post']) {
+      const a = seq(T.genRecursiveSteps(root, mode));
+      const b = seq(T.genIterativeSteps(root, mode));
+      assert.strictEqual(a, b, 'seed=' + seed + ' ' + mode);
+    }
+  }
+});
+
 // ===== 运行器 =====
 let passed = 0, failed = 0;
 for (const { name, fn } of tests) {
