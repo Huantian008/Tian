@@ -115,6 +115,46 @@
 'use strict';
 // 命名空间:所有逻辑挂到 TraversalViz 上,顶层不碰 DOM(保证 Node 可执行)
 const TraversalViz = (() => {
+  // ===== 树数据模型 =====
+  function createNode(val, left = null, right = null) { return { val, left, right }; }
+  function size(root) { return root ? 1 + size(root.left) + size(root.right) : 0; }
+  function height(root) { return root ? 1 + Math.max(height(root.left), height(root.right)) : 0; }
+  function makeSkew(chars, toRight) {
+    let root = null;
+    for (let i = chars.length - 1; i >= 0; i--) {
+      const n = createNode(chars[i]);
+      if (toRight) n.right = root; else n.left = root;
+      root = n;
+    }
+    return root;
+  }
+  const PRESET_TREES = [
+    { name: '王道例题 7 结点', root: (() => {
+        const D = createNode('D'), E = createNode('E'), F = createNode('F'), G = createNode('G');
+        const B = createNode('B', D, E), C = createNode('C', F, G);
+        return createNode('A', B, C);
+      })() },
+    { name: '空树', root: null },
+    { name: '单结点', root: createNode('A') },
+    { name: '左斜树(A→B→C→D→E)', root: makeSkew('ABCDE', false) },
+    { name: '右斜树(A→B→C→D→E)', root: makeSkew('ABCDE', true) },
+  ];
+
+  // ===== 布局:满二叉树下标法,返回 Map<node, {x, y}>,坐标为 0~1 归一化 =====
+  function computeLayout(root) {
+    const map = new Map();
+    if (!root) return map;
+    const h = height(root);
+    const walk = (node, index, depth) => {
+      const x = (index - Math.pow(2, depth) + 0.5) / Math.pow(2, depth);
+      const y = h === 1 ? 0 : depth / (h - 1);
+      map.set(node, { x, y });
+      if (node.left) walk(node.left, index * 2, depth + 1);
+      if (node.right) walk(node.right, index * 2 + 1, depth + 1);
+    };
+    walk(root, 1, 0);
+    return map;
+  }
   const selfTestChecks = []; // { name, fn } —— 浏览器加载时运行
   function runSelfTests() {
     let pass = 0, fail = 0;
@@ -125,7 +165,7 @@ const TraversalViz = (() => {
     return { pass, fail };
   }
   function initUI() { /* Task 8 填充 */ }
-  return { runSelfTests, initUI, selfTestChecks };
+  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout };
 })();
 globalThis.TraversalViz = TraversalViz;
 if (typeof document !== 'undefined') { TraversalViz.initUI(); } // Node 环境跳过 DOM 初始化
