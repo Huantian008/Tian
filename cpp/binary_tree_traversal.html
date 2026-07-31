@@ -305,7 +305,59 @@ const TraversalViz = (() => {
     return { pass, fail };
   }
   function initUI() { /* Task 8 填充 */ }
-  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, genIterativeSteps, genLevelSteps, generateRandomTree, stepsToSequence };
+
+  // ===== 状态应用:纯函数,由步骤数组 + 索引推导完整状态 =====
+  function applySteps(steps, upto) {
+    const colors = new Map();
+    const result = [];
+    let aux = [];
+    let lastEvent = null;
+    const n = Math.min(upto, steps.length);
+    for (let i = 0; i < n; i++) {
+      const s = steps[i];
+      lastEvent = s;
+      aux = s.aux;
+      switch (s.type) {
+        case 'enter': colors.set(s.node, 'enter'); break;
+        case 'push': case 'enqueue': colors.set(s.node, 'push'); break;
+        case 'pop': case 'dequeue': colors.set(s.node, 'pop'); break;
+        case 'visit':
+          colors.set(s.node, 'visit');
+          result.push(s.node.val);
+          break;
+        case 'exit':
+          // 已访问的结点保持橙色,未访问的(蓝色)清除——遍历中 exit 总在 visit 之后
+          if (colors.get(s.node) !== 'visit') colors.delete(s.node);
+          break;
+      }
+    }
+    return { colors, result, aux, lastEvent };
+  }
+
+  // ===== 播放器 =====
+  function createPlayer({ getSteps, onChange }) {
+    let index = 0, timer = null, speed = 1;
+    const state = () => applySteps(getSteps(), index);
+    const emit = () => { if (onChange) onChange(state(), index, getSteps().length); };
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+    const play = () => {
+      stop();
+      if (index >= getSteps().length) index = 0;
+      emit();
+      timer = setInterval(() => {
+        if (index >= getSteps().length - 1) { stop(); return; }
+        index++; emit();
+      }, 900 / speed);
+    };
+    const pause = () => { stop(); };
+    const stepForward = () => { stop(); if (index < getSteps().length) index++; emit(); };
+    const stepBack = () => { stop(); if (index > 0) index--; emit(); };
+    const reset = () => { stop(); index = 0; emit(); };
+    const setSpeed = (v) => { speed = v; if (timer) { stop(); play(); } };
+    return { play, pause, stepForward, stepBack, reset, setSpeed, getIndex: () => index, getState: state };
+  }
+
+  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, genIterativeSteps, genLevelSteps, generateRandomTree, stepsToSequence, applySteps, createPlayer };
 })();
 globalThis.TraversalViz = TraversalViz;
 if (typeof document !== 'undefined') { TraversalViz.initUI(); } // Node 环境跳过 DOM 初始化

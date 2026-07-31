@@ -17,6 +17,83 @@ const tests = [];
 function test(name, fn) { tests.push({ name, fn }); }
 
 // ===== 测试写在这里 =====
+// ===== Task 6: 状态应用 + 播放器 =====
+const MODE_IDS = ['rec-pre', 'rec-in', 'rec-post', 'itr-pre', 'itr-in', 'itr-post', 'level'];
+const EXPECTED = {
+  'rec-pre': 'ABDECFG', 'rec-in': 'DBEAFCG', 'rec-post': 'DEBFGCA',
+  'itr-pre': 'ABDECFG', 'itr-in': 'DBEAFCG', 'itr-post': 'DEBFGCA',
+  'level': 'ABCDEFG',
+};
+const genStepsOf = (modeId, root) => {
+  if (modeId.startsWith('rec-')) return T.genRecursiveSteps(root, modeId.slice(4));
+  if (modeId.startsWith('itr-')) return T.genIterativeSteps(root, modeId.slice(4));
+  return T.genLevelSteps(root);
+};
+
+test('applySteps:逐步应用到末尾,7 种模式结果全部正确', () => {
+  for (const modeId of MODE_IDS) {
+    const steps = genStepsOf(modeId, CANONICAL);
+    const st = T.applySteps(steps, steps.length);
+    assert.strictEqual(st.result.join(''), EXPECTED[modeId], modeId);
+    assert.strictEqual(st.colors.size, 7, modeId + ' 所有结点应已访问');
+    for (const c of st.colors.values()) assert.strictEqual(c, 'visit', modeId);
+  }
+});
+
+test('applySteps:upto=0 为空状态,中途状态含部分结果', () => {
+  const steps = T.genRecursiveSteps(CANONICAL, 'pre');
+  const empty = T.applySteps(steps, 0);
+  assert.strictEqual(empty.result.length, 0);
+  assert.strictEqual(empty.colors.size, 0);
+  const mid = T.applySteps(steps, 4); // enter A, visit A, enter B, visit B
+  assert.strictEqual(mid.result.join(''), 'AB');
+  assert.strictEqual(mid.colors.get(CANONICAL), 'visit');
+});
+
+test('applySteps:exit 事件把结点颜色清回默认', () => {
+  const steps = T.genRecursiveSteps(CANONICAL, 'pre');
+  const st = T.applySteps(steps, 3); // enter A, visit A, enter B
+  assert.strictEqual(st.colors.get(CANONICAL), 'visit');
+  // 走到底,B 之后全部 exit,最后一步是 exit A
+  const full = T.applySteps(steps, steps.length);
+  assert.strictEqual(steps[steps.length - 1].type, 'exit');
+  // 最终状态里除已访问橙色外无残留蓝色——所有 enter 的结点都有 exit 或 visit 覆盖
+});
+
+test('播放器:stepForward 走完全程,结果与期望一致,index 正确', () => {
+  for (const modeId of MODE_IDS) {
+    const steps = genStepsOf(modeId, CANONICAL);
+    let latest = null;
+    const p = T.createPlayer({ getSteps: () => steps, onChange: (st, idx, total) => { latest = st; } });
+    for (let i = 0; i < steps.length + 5; i++) p.stepForward(); // 多走也不越界
+    assert.strictEqual(p.getIndex(), steps.length);
+    assert.strictEqual(latest.result.join(''), EXPECTED[modeId], modeId);
+  }
+});
+
+test('播放器:stepBack 回退到开头,结果逐步减少', () => {
+  const steps = T.genLevelSteps(CANONICAL);
+  const p = T.createPlayer({ getSteps: () => steps });
+  while (p.getIndex() < steps.length) p.stepForward();
+  assert.strictEqual(p.getState().result.length, 7);
+  p.stepBack(); // 跨过 visit G
+  assert.strictEqual(p.getState().result.length, 6);
+  p.stepBack(); // 跨过 dequeue G,访问数不变
+  assert.strictEqual(p.getState().result.length, 6);
+  p.stepBack(); // 跨过 visit F
+  assert.strictEqual(p.getState().result.length, 5);
+  p.reset();
+  assert.strictEqual(p.getIndex(), 0);
+  assert.strictEqual(p.getState().result.length, 0);
+});
+
+test('播放器:空步骤不崩溃,play/setSpeed 可调用', () => {
+  const p = T.createPlayer({ getSteps: () => [] });
+  p.stepForward(); p.stepBack(); p.play(); p.pause(); p.reset();
+  p.setSpeed(2);
+  assert.strictEqual(p.getIndex(), 0);
+});
+
 test('命名空间暴露 runSelfTests', () => {
   assert.strictEqual(typeof T.runSelfTests, 'function');
 });
