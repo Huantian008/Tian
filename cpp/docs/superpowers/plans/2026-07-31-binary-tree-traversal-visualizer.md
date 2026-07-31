@@ -967,7 +967,7 @@ Expected: `applySteps is not a function` 失败。
       if (index >= getSteps().length) index = 0;
       emit();
       timer = setInterval(() => {
-        if (index >= getSteps().length - 1) { stop(); return; }
+        if (index >= getSteps().length) { stop(); return; } // 走完全程才停,最后一步也要 emit
         index++; emit();
       }, 900 / speed);
     };
