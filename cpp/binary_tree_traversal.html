@@ -128,7 +128,7 @@ const TraversalViz = (() => {
   return { runSelfTests, initUI, selfTestChecks };
 })();
 globalThis.TraversalViz = TraversalViz;
-if (typeof document !== 'undefined') { initUI(); } // Node 环境跳过 DOM 初始化
+if (typeof document !== 'undefined') { TraversalViz.initUI(); } // Node 环境跳过 DOM 初始化
 </script>
 </body>
 </html>
