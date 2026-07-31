@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>二叉树遍历可视化 - 考研数据结构</title>
+<style>
+  :root {
+    --c-enter: #2f6fed;  /* 蓝:当前指针/递归层 */
+    --c-push:  #1db954;  /* 绿:入栈/入队 */
+    --c-pop:   #e5484d;  /* 红:出栈/出队 */
+    --c-visit: #f59f00;  /* 橙:访问 */
+    --c-bg:    #f7f8fa;
+    --c-card:  #ffffff;
+    --c-line:  #d9dee5;
+    --c-text:  #22262b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: var(--c-bg); color: var(--c-text); }
+  header { padding: 14px 24px; background: var(--c-card); border-bottom: 1px solid var(--c-line); display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 20px; }
+  #self-test-badge { font-size: 13px; padding: 4px 12px; border-radius: 999px; background: #eee; color: #555; }
+  #self-test-badge.pass { background: #e3f7ec; color: #157347; }
+  #self-test-badge.fail { background: #fdecec; color: #b02a37; }
+  main { display: flex; gap: 16px; padding: 16px; min-height: calc(100vh - 64px); }
+  #canvas-wrap { flex: 1; background: var(--c-card); border: 1px solid var(--c-line); border-radius: 10px; padding: 10px; min-width: 0; }
+  #tree-canvas { width: 100%; height: 560px; display: block; }
+  #tree-info { font-size: 13px; color: #666; padding: 4px 2px 0; }
+  aside { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: var(--c-card); border: 1px solid var(--c-line); border-radius: 10px; padding: 12px; }
+  .card h2 { font-size: 14px; margin-bottom: 8px; color: #444; }
+  .card label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
+  select, button, input[type=range] { font-size: 14px; }
+  select { width: 100%; padding: 6px 8px; border: 1px solid var(--c-line); border-radius: 6px; background: #fff; margin-bottom: 10px; }
+  .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  button { padding: 7px 12px; border: 1px solid var(--c-line); border-radius: 6px; background: #fff; cursor: pointer; }
+  button:hover { background: #f0f2f5; }
+  button.primary { background: var(--c-enter); color: #fff; border-color: var(--c-enter); }
+  button.primary:hover { background: #245bd4; }
+  .speed-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .speed-row input { flex: 1; }
+  #speed-label { font-size: 13px; color: #666; min-width: 52px; }
+  #result-sequence { display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; }
+  .chip { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--c-line); background: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 15px; }
+  .chip.done { background: var(--c-visit); border-color: var(--c-visit); color: #fff; }
+  #aux-panel { font-size: 13px; line-height: 1.7; color: #333; min-height: 40px; font-family: Consolas, "Courier New", monospace; }
+  /* 树节点状态 */
+  .t-node circle { stroke: #33414f; stroke-width: 2; fill: #fff; transition: fill .25s, stroke .25s; }
+  .t-node.enter circle { fill: var(--c-enter); stroke: var(--c-enter); }
+  .t-node.push circle { fill: var(--c-push); stroke: var(--c-push); }
+  .t-node.pop circle { fill: var(--c-pop); stroke: var(--c-pop); }
+  .t-node.visit circle { fill: var(--c-visit); stroke: var(--c-visit); }
+  .t-node text { fill: #fff; font-size: 17px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .t-edge { stroke: var(--c-line); stroke-width: 2; }
+  .flash { animation: popflash .5s ease; }
+  @keyframes popflash { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  .legend { font-size: 12px; color: #666; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .legend span::before { content: ''; display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🌳 二叉树遍历可视化(考研数据结构)</h1>
+  <div id="self-test-badge">自检运行中…</div>
+</header>
+<main>
+  <div id="canvas-wrap">
+    <svg id="tree-canvas" viewBox="0 0 800 560" preserveAspectRatio="xMidYMid meet"></svg>
+    <div id="tree-info"></div>
+  </div>
+  <aside>
+    <div class="card">
+      <h2>遍历模式</h2>
+      <select id="mode-select"></select>
+    </div>
+    <div class="card">
+      <h2>树的来源</h2>
+      <select id="tree-select"></select>
+      <button id="btn-random" class="primary">🎲 随机生成</button>
+    </div>
+    <div class="card">
+      <h2>控制</h2>
+      <div class="btn-row">
+        <button id="btn-prev" title="上一步">⏮ 上一步</button>
+        <button id="btn-play" class="primary" title="播放/暂停">▶ 播放</button>
+        <button id="btn-next" title="下一步">⏭ 下一步</button>
+        <button id="btn-reset" title="重置">↺ 重置</button>
+      </div>
+      <div class="speed-row">
+        <span>速度</span>
+        <input id="speed-slider" type="range" min="25" max="300" value="100">
+        <span id="speed-label">1.0×</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>遍历结果序列</h2>
+      <div id="result-sequence"></div>
+      <div class="legend">
+        <span style="color:#157347">已访问</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>辅助结构面板</h2>
+      <div id="aux-panel"></div>
+      <div class="legend">
+        <span style="color:#1db954">● 入栈/入队</span>
+        <span style="color:#e5484d">● 出栈/出队</span>
+        <span style="color:#2f6fed">● 当前层/指针</span>
+        <span style="color:#f59f00">● 访问</span>
+      </div>
+    </div>
+  </aside>
+</main>
+<script>
+'use strict';
+// 命名空间:所有逻辑挂到 TraversalViz 上,顶层不碰 DOM(保证 Node 可执行)
+const TraversalViz = (() => {
+  const selfTestChecks = []; // { name, fn } —— 浏览器加载时运行
+  function runSelfTests() {
+    let pass = 0, fail = 0;
+    for (const c of selfTestChecks) {
+      try { c.fn(); pass++; }
+      catch (e) { fail++; console.error('[自检失败] ' + c.name + ': ' + e.message); }
+    }
+    return { pass, fail };
+  }
+  function initUI() { /* Task 8 填充 */ }
+  return { runSelfTests, initUI, selfTestChecks };
+})();
+globalThis.TraversalViz = TraversalViz;
+if (typeof document !== 'undefined') { initUI(); } // Node 环境跳过 DOM 初始化
+</script>
+</body>
+</html>
