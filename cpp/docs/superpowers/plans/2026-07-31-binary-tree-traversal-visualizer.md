@@ -211,7 +211,7 @@ const TraversalViz = (() => {
   return { runSelfTests, initUI, selfTestChecks };
 })();
 globalThis.TraversalViz = TraversalViz;
-if (typeof document !== 'undefined') { initUI(); } // Node 环境跳过 DOM 初始化
+if (typeof document !== 'undefined') { TraversalViz.initUI(); } // 必须走命名空间:initUI 是 IIFE 内的函数,裸调用会 ReferenceError
 </script>
 </body>
 </html>
