@@ -13,7 +13,8 @@
 
 - 单文件原生 HTML + CSS + JavaScript,零依赖、零构建。
 - 双击在浏览器打开即可使用,离线可用,便于分享。
-- 放置于仓库根目录 `binary_tree_traversal.html`。
+- 放置于 C++ 学习工作区根目录:`e:\code\cpp\binary_tree_traversal.html`
+  (注意:git 仓库根在 `E:/code`,此文件归入 cpp 子目录)。
 
 ## 页面布局
 
