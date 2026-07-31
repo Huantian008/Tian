@@ -506,7 +506,6 @@ const TraversalViz = (() => {
     if (player) player.pause(); // 停掉旧播放器,避免播放中切换导致定时器泄漏/双动画竞争
     currentTree = currentTree || PRESET_TREES[0].root;
     const steps = getMode().gen(currentTree); currentFull = stepsToSequence(steps);
-    const full = stepsToSequence(steps);
     player = createPlayer({ getSteps: () => steps, onChange: onPlayerChange });
     onPlayerChange(player.getState(), 0, steps.length);
   }
