@@ -345,7 +345,7 @@ const TraversalViz = (() => {
       if (index >= getSteps().length) index = 0;
       emit();
       timer = setInterval(() => {
-        if (index >= getSteps().length - 1) { stop(); return; }
+        if (index >= getSteps().length) { stop(); return; }
         index++; emit();
       }, 900 / speed);
     };
