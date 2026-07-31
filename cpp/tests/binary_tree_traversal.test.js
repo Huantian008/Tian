@@ -136,6 +136,54 @@ test('递归:斜树序列正确(左斜 A→B→C→D→E)', () => {
   assert.strictEqual(seq(T.genRecursiveSteps(L, 'post')), 'EDCBA');
 });
 
+// ===== Task 4: 非递归遍历(栈) =====
+test('非递归先序:序列 A B D E C F G', () => {
+  assert.strictEqual(seq(T.genIterativeSteps(CANONICAL, 'pre')), 'ABDECFG');
+});
+test('非递归中序:序列 D B E A F C G', () => {
+  assert.strictEqual(seq(T.genIterativeSteps(CANONICAL, 'in')), 'DBEAFCG');
+});
+test('非递归后序:序列 D E B F G C A', () => {
+  assert.strictEqual(seq(T.genIterativeSteps(CANONICAL, 'post')), 'DEBFGCA');
+});
+
+test('非递归先序:步骤结构(21 步,先 push 后 pop+visit)', () => {
+  const steps = T.genIterativeSteps(CANONICAL, 'pre');
+  assert.strictEqual(steps.length, 21);
+  assert.strictEqual(steps[0].type, 'push');
+  assert.deepStrictEqual(steps[0].aux, ['A']);
+  const types = steps.map(s => s.type);
+  assert.strictEqual(types.filter(t => t === 'push').length, 7);
+  assert.strictEqual(types.filter(t => t === 'pop').length, 7);
+  assert.strictEqual(types.filter(t => t === 'visit').length, 7);
+  // 出栈访问 A 后,先压右子 C 再压左子 B → 栈为 [C, B](右先左后,栈顶是 B)
+  const afterPopA = steps.findIndex(s => s.type === 'visit' && s.node.val === 'A');
+  assert.deepStrictEqual(steps[afterPopA + 2].aux, ['C', 'B']);
+});
+
+test('非递归后序:tag 机制步骤结构(A 压入两次,最后访问根)', () => {
+  const steps = T.genIterativeSteps(CANONICAL, 'post');
+  const pushA = steps.filter(s => s.type === 'push' && s.node.val === 'A');
+  assert.strictEqual(pushA.length, 2);
+  assert.strictEqual(steps[steps.length - 1].type, 'visit');
+  assert.strictEqual(steps[steps.length - 1].node.val, 'A');
+  // 访问 D 的瞬间,栈为 [A, C, B, E](A/C 待回溯,已二入栈;E 等待处理)
+  const atVisitD = steps.findIndex(s => s.type === 'visit' && s.node.val === 'D');
+  assert.deepStrictEqual(steps[atVisitD].aux, ['A', 'C', 'B', 'E']);
+  // 访问根 A 时栈已空
+  assert.deepStrictEqual(steps[steps.length - 1].aux, []);
+});
+
+test('交叉验证:非递归 = 递归(全部预设树 × 3 模式)', () => {
+  for (const tree of T.PRESET_TREES) {
+    for (const mode of ['pre', 'in', 'post']) {
+      const a = seq(T.genRecursiveSteps(tree.root, mode));
+      const b = seq(T.genIterativeSteps(tree.root, mode));
+      assert.strictEqual(a, b, tree.name + ' ' + mode + ': ' + a + ' != ' + b);
+    }
+  }
+});
+
 // ===== 运行器 =====
 let passed = 0, failed = 0;
 for (const { name, fn } of tests) {

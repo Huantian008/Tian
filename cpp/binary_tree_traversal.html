@@ -184,6 +184,50 @@ const TraversalViz = (() => {
   function stepsToSequence(steps) {
     return steps.filter(s => s.type === 'visit').map(s => s.node.val);
   }
+  // ===== 非递归遍历步骤生成(栈模拟,王道写法) =====
+  // pre: 出栈即访问,右子先入栈、左子后入栈
+  // in:  指针沿左链深入入栈,出栈访问后转向右子树
+  // post:栈元素 {node, tag};tag=0 出栈后以 tag=1 重新入栈,再出栈才访问
+  function genIterativeSteps(root, mode) {
+    const steps = [];
+    // 快照只存值:pre/in 栈里是结点,post 栈里是 {node, tag}
+    const auxOf = (st) => st.map(e => (e.node ? e.node.val : e.val));
+    const pushEv = (node, stack) => steps.push({ type: 'push', node, aux: auxOf(stack) });
+    const popEv = (node, stack) => steps.push({ type: 'pop', node, aux: auxOf(stack) });
+    const visitEv = (node, stack) => steps.push({ type: 'visit', node, aux: auxOf(stack) });
+    const stack = [];
+    if (root) {
+      if (mode === 'pre') {
+        stack.push(root); pushEv(root, stack);
+        while (stack.length) {
+          const n = stack.pop(); popEv(n, stack);
+          visitEv(n, stack);
+          if (n.right) { stack.push(n.right); pushEv(n.right, stack); }
+          if (n.left) { stack.push(n.left); pushEv(n.left, stack); }
+        }
+      } else if (mode === 'in') {
+        let p = root;
+        while (p || stack.length) {
+          while (p) { stack.push(p); pushEv(p, stack); p = p.left; }
+          const n = stack.pop(); popEv(n, stack);
+          visitEv(n, stack);
+          p = n.right;
+        }
+      } else { // post,tag 标记法
+        stack.push({ node: root, tag: 0 }); pushEv(root, stack);
+        while (stack.length) {
+          const top = stack.pop(); popEv(top.node, stack);
+          if (top.tag === 1) { visitEv(top.node, stack); }
+          else {
+            stack.push({ node: top.node, tag: 1 }); pushEv(top.node, stack);
+            if (top.node.right) { stack.push({ node: top.node.right, tag: 0 }); pushEv(top.node.right, stack); }
+            if (top.node.left) { stack.push({ node: top.node.left, tag: 0 }); pushEv(top.node.left, stack); }
+          }
+        }
+      }
+    }
+    return steps;
+  }
   const selfTestChecks = []; // { name, fn } —— 浏览器加载时运行
   function runSelfTests() {
     let pass = 0, fail = 0;
@@ -194,7 +238,7 @@ const TraversalViz = (() => {
     return { pass, fail };
   }
   function initUI() { /* Task 8 填充 */ }
-  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, stepsToSequence };
+  return { runSelfTests, initUI, selfTestChecks, createNode, size, height, makeSkew, PRESET_TREES, computeLayout, genRecursiveSteps, genIterativeSteps, stepsToSequence };
 })();
 globalThis.TraversalViz = TraversalViz;
 if (typeof document !== 'undefined') { TraversalViz.initUI(); } // Node 环境跳过 DOM 初始化
