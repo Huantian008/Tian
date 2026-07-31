@@ -1230,9 +1230,9 @@ Expected: `MODES is not defined` / 自检通过数为 0。
   const getMode = () => MODES.find(m => m.id === currentModeId);
 
   function rebuild() {
+    if (player) player.pause(); // 停掉旧播放器,避免播放中切换导致定时器泄漏/双动画竞争
     currentTree = currentTree || PRESET_TREES[0].root;
     const steps = getMode().gen(currentTree);
-    const full = stepsToSequence(steps);
     player = createPlayer({ getSteps: () => steps, onChange: onPlayerChange });
     onPlayerChange(player.getState(), 0, steps.length);
   }
@@ -1361,7 +1361,7 @@ Expected: 全部 ✓。
 
 双击打开 `binary_tree_traversal.html`(离线),逐项核对:
 
-1. 顶部徽章显示"自检 7/7 通过"(绿色);F12 控制台无红色报错。
+1. 顶部徽章显示"自检 8/8 通过"(绿色,7 项纯逻辑 + 1 项画布 DOM 检查);F12 控制台无红色报错。
 2. 默认显示王道例题树,模式为递归先序;点 ▶ 播放,观察:先根 A 变橙,再 B、D、E、C、F、G 依次访问;右侧结果序列逐个填橙;辅助面板显示"递归调用栈"和进入/返回动作。
 3. 依次切换 7 种模式,每种都播放一遍;**非递归模式看栈变化**(先序:出栈访问、右先左后;中序:沿左链压栈;后序:同一结点变绿两次后变橙——tag 机制),**层次模式看队列变化**(出队访问、左右入队)。
 4. 单步前进/后退各 10 次,颜色与面板状态始终一致,无跳变。
