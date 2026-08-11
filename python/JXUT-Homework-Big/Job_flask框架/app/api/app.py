@@ -13,11 +13,12 @@ from flask_cors import CORS
 from api.air_quality import generate_dashboard
 
 
-app = Flask(__name__, static_folder="../dist", static_url_path="")
-CORS(app)
-
 API_DIR = Path(__file__).resolve().parent
+DIST_DIR = API_DIR.parent / "dist"
 DATA_FILE = API_DIR / "data" / "air_quality_dashboard.json"
+
+app = Flask(__name__, static_folder=str(DIST_DIR), static_url_path="")
+CORS(app)
 
 
 def get_dashboard_data() -> dict[str, object]:
@@ -34,7 +35,7 @@ def get_dashboard_data() -> dict[str, object]:
 
 @app.route("/")
 def index():
-    return send_from_directory(app.static_folder, "index.html")
+    return send_from_directory(DIST_DIR, "index.html")
 
 
 @app.route("/api/dashboard")

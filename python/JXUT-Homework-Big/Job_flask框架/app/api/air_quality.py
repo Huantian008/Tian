@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 from typing import Iterable
@@ -177,6 +177,42 @@ def download_city_csv(date: str, cache_dir: Path) -> pd.DataFrame:
     return pd.read_csv(BytesIO(response.content))
 
 
+def city_csv_available(date_value: str) -> bool:
+    try:
+        response = requests.head(
+            DATA_URL.format(date=date_value),
+            timeout=10,
+            allow_redirects=True,
+        )
+        if response.status_code == 200:
+            content_length = int(response.headers.get("content-length", "0") or 0)
+            if content_length > 1000:
+                return True
+        response = requests.get(DATA_URL.format(date=date_value), timeout=10, stream=True)
+        if response.status_code != 200:
+            return False
+        preview = response.raw.read(80).decode("utf-8", errors="ignore")
+        return "date,hour,type" in preview
+    except requests.RequestException:
+        return False
+
+
+def latest_available_range(days: int = 7, lookback_days: int = 45) -> DateRange:
+    latest: date | None = None
+    today = date.today()
+    for offset in range(lookback_days + 1):
+        candidate = today - timedelta(days=offset)
+        if city_csv_available(candidate.strftime("%Y%m%d")):
+            latest = candidate
+            break
+
+    if latest is None:
+        raise RuntimeError(f"No available air quality CSV found in the last {lookback_days} days")
+
+    start = latest - timedelta(days=days - 1)
+    return DateRange(start=start.strftime("%Y-%m-%d"), end=latest.strftime("%Y-%m-%d"))
+
+
 def records_from_city_frames(frames: Iterable[pd.DataFrame]) -> list[dict[str, float | str]]:
     records: list[dict[str, float | str]] = []
     for frame in frames:
@@ -304,7 +340,7 @@ def summarize_dashboard(
             "dominantPollutant": dominant_counter.most_common(1)[0][0],
             "dataSource": "quotsoft 中国空气质量历史数据（原始来源：中国环境监测总站全国城市空气质量实时发布平台）",
             "reportSource": "生态环境部城市空气质量状况月报",
-            "updateTime": "2026-04-08",
+            "updateTime": end,
             "forecastNote": "预测值基于7日全国平均AQI线性趋势，仅作趋势演示。",
         },
         "mapPoints": map_points[:60],

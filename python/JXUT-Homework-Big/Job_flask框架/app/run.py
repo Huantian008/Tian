@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "api"))
 
-from api.app import app  # noqa: E402
+from api.app import app, get_dashboard_data  # noqa: E402
 
 
 if __name__ == "__main__":
@@ -17,7 +17,10 @@ if __name__ == "__main__":
     print("  全国空气质量可视化分析大屏")
     print("=" * 64)
     print("  访问地址: http://127.0.0.1:5000")
-    print("  数据周期: 2026-04-01 至 2026-04-07")
+    dashboard = get_dashboard_data()
+    summary = dashboard.get("summary", {})
+    date_range = summary.get("dateRange", "未知") if isinstance(summary, dict) else "未知"
+    print(f"  数据周期: {date_range}")
     print("  API:")
     print("    - GET /api/dashboard  - 获取完整大屏数据")
     print("    - GET /api/map        - 城市地图散点数据")

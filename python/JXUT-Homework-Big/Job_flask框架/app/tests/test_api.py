@@ -23,7 +23,7 @@ class DashboardApiTest(unittest.TestCase):
         ]:
             self.assertIn(key, payload)
         self.assertIn("空气质量", payload["summary"]["title"])
-        self.assertEqual(payload["summary"]["dateRange"], "2026-04-01 至 2026-04-07")
+        self.assertIn(" 至 ", payload["summary"]["dateRange"])
 
     def test_refresh_returns_fixed_dashboard_without_random_drift(self):
         first = self.client.get("/api/refresh").get_json()
